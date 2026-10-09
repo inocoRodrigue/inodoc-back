@@ -25,7 +25,7 @@ import static org.mockito.Mockito.*;
 class ProfileDeletionTest {
     private final ProfileRepository profiles = mock(ProfileRepository.class);
     private final UserRepository users = mock(UserRepository.class);
-    private final ProfileService service = new ProfileService(profiles, users);
+    private final ProfileService service = new ProfileService(profiles, users, mock(CompanySettingsService.class));
 
     @AfterEach
     void clear() {

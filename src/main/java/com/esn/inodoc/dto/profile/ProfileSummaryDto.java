@@ -3,6 +3,7 @@ package com.esn.inodoc.dto.profile;
 import com.esn.inodoc.domain.AvailabilityStatus;
 import com.esn.inodoc.domain.ProfileStatus;
 
+import java.time.Instant;
 import java.util.UUID;
 
 /**
@@ -19,5 +20,7 @@ public record ProfileSummaryDto(
         AvailabilityStatus availabilityStatus,
         Integer yearsOfExperience,
         String expertiseDomain,
-        int dossierCount) {
+        int dossierCount,
+        Instant masterUpdatedAt,
+        boolean masterObsolete) {
 }

@@ -8,5 +8,6 @@ public record CompanyContactDto(
         String phone,
         String email,
         String emailSignature,
-        String logoUrl) {
+        String logoUrl,
+        Integer staleDossierMonths) {
 }

@@ -9,6 +9,8 @@ import com.esn.inodoc.domain.ExperienceProject;
 import com.esn.inodoc.domain.LanguageSkill;
 import com.esn.inodoc.domain.SkillGroup;
 import com.esn.inodoc.domain.TestResult;
+import com.esn.inodoc.service.ExperiencePeriodFormatter;
+import com.esn.inodoc.service.DossierObsolescence;
 
 import java.util.List;
 import java.util.Optional;
@@ -49,6 +51,10 @@ public final class DossierMapper {
     }
 
     public static DossierSummaryDto toSummary(CompetenceDossier d) {
+        return toSummary(d, 12);
+    }
+
+    public static DossierSummaryDto toSummary(CompetenceDossier d, int staleAfterMonths) {
         return new DossierSummaryDto(
                 d.getId(),
                 d.getLabel(),
@@ -56,7 +62,8 @@ public final class DossierMapper {
                 d.getHeadline(),
                 d.getYearsOfExperience(),
                 d.getExpertiseDomain(),
-                d.getUpdatedAt());
+                d.getUpdatedAt(),
+                DossierObsolescence.isObsolete(d.isMaster(), d.getUpdatedAt(), staleAfterMonths));
     }
 
     /** Applies the payload content (except the master flag, handled by the service). */
@@ -150,7 +157,10 @@ public final class DossierMapper {
 
     private static ExperienceCompanyDto toDto(ExperienceCompany e) {
         return new ExperienceCompanyDto(
-                e.getId(), e.getCompany(), e.getStartDate(), e.getEndDate(), e.getRoleTitle(), e.getContext(),
+            e.getId(), e.getCompany(), e.getStartDate(), e.getEndDate(),
+            ExperiencePeriodFormatter.formatDuration(e.getStartDate(), e.getEndDate()),
+            ExperiencePeriodFormatter.formatPeriod(e.getStartDate(), e.getEndDate()),
+            e.getRoleTitle(), e.getContext(),
                 e.getProjects().stream().map(DossierMapper::toDto).toList());
     }
 

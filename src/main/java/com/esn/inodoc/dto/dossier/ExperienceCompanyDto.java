@@ -9,6 +9,8 @@ public record ExperienceCompanyDto(
         String company,
         LocalDate startDate,
         LocalDate endDate,
+        String duration,
+        String period,
         String roleTitle,
         String context,
         List<ExperienceProjectDto> projects) {

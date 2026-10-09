@@ -29,15 +29,19 @@ public class ProfileService {
 
     private final ProfileRepository profileRepository;
     private final UserRepository userRepository;
+    private final CompanySettingsService companySettingsService;
 
     public ProfileService(ProfileRepository profileRepository,
-                          UserRepository userRepository) {
+                          UserRepository userRepository,
+                          CompanySettingsService companySettingsService) {
         this.profileRepository = profileRepository;
         this.userRepository = userRepository;
+        this.companySettingsService = companySettingsService;
     }
 
     @Transactional(readOnly = true)
     public Page<ProfileSummaryDto> search(ProfileSpecifications.ProfileSearchCriteria criteria, Pageable pageable) {
+        int staleAfterMonths = companySettingsService.get().staleDossierMonths();
         if (!canManageAll()) {
             UUID ownProfileId = currentOwnProfileId();
             if (ownProfileId == null) {
@@ -45,10 +49,10 @@ public class ProfileService {
             }
             Profile own = profileRepository.findById(ownProfileId).orElse(null);
             return own == null ? Page.empty(pageable)
-                    : new PageImpl<>(List.of(ProfileMapper.toSummary(own)), pageable, 1);
+                    : new PageImpl<>(List.of(ProfileMapper.toSummary(own, staleAfterMonths)), pageable, 1);
         }
         return profileRepository.findAll(ProfileSpecifications.build(criteria), pageable)
-                .map(ProfileMapper::toSummary);
+                .map(profile -> ProfileMapper.toSummary(profile, staleAfterMonths));
     }
 
     @Transactional(readOnly = true)
@@ -56,7 +60,7 @@ public class ProfileService {
         Profile profile = requireProfile(id);
         assertCanAccess(profile.getId());
         User account = userRepository.findByProfileId(profile.getId()).orElse(null);
-        return ProfileMapper.toDto(profile, account);
+        return ProfileMapper.toDto(profile, account, companySettingsService.get().staleDossierMonths());
     }
 
     @Transactional(readOnly = true)
@@ -65,7 +69,8 @@ public class ProfileService {
         if (ownProfileId == null) {
             throw new NotFoundException("Aucun dossier de compétences associé à votre compte");
         }
-        return ProfileMapper.toDto(requireProfile(ownProfileId));
+        return ProfileMapper.toDto(requireProfile(ownProfileId), null,
+            companySettingsService.get().staleDossierMonths());
     }
 
     @Transactional
@@ -76,7 +81,7 @@ public class ProfileService {
         // On creation, no account is associated => external.
         profile.setStatus(ProfileStatus.EXTERNAL);
         profile = profileRepository.save(profile);
-        return ProfileMapper.toDto(profile);
+        return ProfileMapper.toDto(profile, null, companySettingsService.get().staleDossierMonths());
     }
 
     @Transactional
@@ -96,7 +101,7 @@ public class ProfileService {
             profile.setStatus(ProfileStatus.EXTERNAL);
         }
         profile = profileRepository.save(profile);
-        return ProfileMapper.toDto(profile, account);
+        return ProfileMapper.toDto(profile, account, companySettingsService.get().staleDossierMonths());
     }
 
     @Transactional

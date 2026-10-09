@@ -1,6 +1,7 @@
 package com.esn.inodoc.service;
 
 import com.esn.inodoc.domain.CompanySettings;
+import com.esn.inodoc.controller.error.BadRequestException;
 import com.esn.inodoc.dto.company.CompanyContactDto;
 import com.esn.inodoc.repo.CompanySettingsRepository;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class CompanySettingsService {
 
+    public static final int DEFAULT_STALE_DOSSIER_MONTHS = 12;
+    public static final int MAX_STALE_DOSSIER_MONTHS = 120;
     /** Signature applied by default to emails if none is configured. */
     public static final String DEFAULT_SIGNATURE = "Cordialement,\nL'équipe inoDoc";
 
@@ -27,7 +30,8 @@ public class CompanySettingsService {
     public CompanyContactDto get() {
         return repository.findFirstByOrderByCreatedAtAsc()
                 .map(this::toDto)
-                .orElseGet(() -> new CompanyContactDto(null, null, null, null, null));
+                .orElseGet(() -> new CompanyContactDto(null, null, null, null, null,
+                    DEFAULT_STALE_DOSSIER_MONTHS));
     }
 
     /**
@@ -44,6 +48,11 @@ public class CompanySettingsService {
 
     @Transactional
     public CompanyContactDto update(CompanyContactDto request) {
+        int staleDossierMonths = request.staleDossierMonths() == null
+                ? DEFAULT_STALE_DOSSIER_MONTHS : request.staleDossierMonths();
+        if (staleDossierMonths < 1 || staleDossierMonths > MAX_STALE_DOSSIER_MONTHS) {
+            throw new BadRequestException("Le délai d'obsolescence doit être compris entre 1 et 120 mois");
+        }
         CompanySettings settings = repository.findFirstByOrderByCreatedAtAsc()
                 .orElseGet(CompanySettings::new);
         settings.setAddress(trimToNull(request.address()));
@@ -51,6 +60,7 @@ public class CompanySettingsService {
         settings.setEmail(trimToNull(request.email()));
         settings.setEmailSignature(trimToNull(request.emailSignature()));
         settings.setLogoUrl(trimToNull(request.logoUrl()));
+        settings.setStaleDossierMonths(staleDossierMonths);
         CompanySettings saved = repository.save(settings);
         return toDto(saved);
     }
@@ -61,7 +71,8 @@ public class CompanySettingsService {
                 settings.getPhone(),
                 settings.getEmail(),
                 settings.getEmailSignature(),
-                settings.getLogoUrl());
+                settings.getLogoUrl(),
+                settings.getStaleDossierMonths());
     }
 
     private String trimToNull(String value) {

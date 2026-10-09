@@ -28,6 +28,17 @@ public class CompanySettings extends BaseEntity {
     @Column(name = "logo_url", columnDefinition = "TEXT")
     private String logoUrl;
 
+    @Column(name = "stale_dossier_months", nullable = false)
+    private int staleDossierMonths = 12;
+
+    public int getStaleDossierMonths() {
+        return staleDossierMonths;
+    }
+
+    public void setStaleDossierMonths(int staleDossierMonths) {
+        this.staleDossierMonths = staleDossierMonths;
+    }
+
     public String getLogoUrl() {
         return logoUrl;
     }

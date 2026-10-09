@@ -28,25 +28,29 @@ public class DossierService {
     private final TechSkillService techSkillService;
     private final PdfService pdfService;
     private final S3ImageStorage storage;
+    private final CompanySettingsService companySettingsService;
 
     public DossierService(CompetenceDossierRepository dossierRepository,
                           ProfileService profileService,
                           TechSkillService techSkillService,
                           PdfService pdfService,
-                          S3ImageStorage storage) {
+                          S3ImageStorage storage,
+                          CompanySettingsService companySettingsService) {
         this.dossierRepository = dossierRepository;
         this.profileService = profileService;
         this.techSkillService = techSkillService;
         this.pdfService = pdfService;
         this.storage = storage;
+        this.companySettingsService = companySettingsService;
     }
 
     @Transactional(readOnly = true)
     public List<DossierSummaryDto> listForProfile(UUID profileId) {
         profileService.assertCanAccess(profileId);
+        int staleAfterMonths = companySettingsService.get().staleDossierMonths();
         return dossierRepository
                 .findByProfileIdOrderByMasterDescCreatedAtAsc(profileId)
-                .stream().map(DossierMapper::toSummary).toList();
+            .stream().map(dossier -> DossierMapper.toSummary(dossier, staleAfterMonths)).toList();
     }
 
     @Transactional(readOnly = true)

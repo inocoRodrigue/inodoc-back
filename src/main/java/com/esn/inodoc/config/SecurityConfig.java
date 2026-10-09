@@ -1,6 +1,7 @@
 package com.esn.inodoc.config;
 
 import com.esn.inodoc.security.JwtAuthenticationFilter;
+import com.esn.inodoc.security.RequestLoggingFilter;
 import com.esn.inodoc.security.RestAccessDeniedHandler;
 import com.esn.inodoc.security.RestAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
@@ -56,7 +57,8 @@ public class SecurityConfig {
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(authenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler))
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(new RequestLoggingFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

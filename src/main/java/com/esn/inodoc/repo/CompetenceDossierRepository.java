@@ -12,4 +12,6 @@ public interface CompetenceDossierRepository extends JpaRepository<CompetenceDos
     List<CompetenceDossier> findByProfileIdOrderByMasterDescCreatedAtAsc(UUID profileId);
 
     List<CompetenceDossier> findByProfileId(UUID profileId);
+
+    List<CompetenceDossier> findByMasterTrue();
 }

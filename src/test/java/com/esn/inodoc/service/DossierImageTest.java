@@ -14,6 +14,7 @@ import com.esn.inodoc.domain.ExperienceCompany;
 import com.esn.inodoc.domain.ExperienceProject;
 import com.esn.inodoc.dto.company.CompanyContactDto;
 import com.esn.inodoc.dto.dossier.DossierDto;
+import com.esn.inodoc.dto.dossier.DossierMapper;
 import com.esn.inodoc.dto.dossier.DossierUpsertRequest;
 import com.esn.inodoc.repo.CompetenceDossierRepository;
 import com.esn.inodoc.repo.SharedLinkRepository;
@@ -39,6 +40,33 @@ import static org.mockito.Mockito.*;
 
 class DossierImageTest {
     @Test
+    void formatsExperienceDurationFromExactDates() {
+        assertEquals("2 mois", ExperiencePeriodFormatter.formatDuration(
+                java.time.LocalDate.of(2026, 9, 1), java.time.LocalDate.of(2026, 10, 31)));
+        assertEquals("3 ans", ExperiencePeriodFormatter.formatDuration(
+                java.time.LocalDate.of(2023, 9, 1), java.time.LocalDate.of(2026, 9, 1)));
+        var dossier = dossier("https://external.example.test/");
+        var experience = new ExperienceCompany();
+        experience.setCompany("Datelia");
+        experience.setStartDate(java.time.LocalDate.of(2026, 9, 1));
+        experience.setEndDate(java.time.LocalDate.of(2026, 10, 31));
+        dossier.addExperience(experience);
+        var dtoExperience = DossierMapper.toDto(dossier).experiences().get(0);
+        assertEquals("2 mois", dtoExperience.duration());
+        assertEquals("09/2026 - 10/2026", dtoExperience.period());
+    }
+
+    @Test
+    void marksOnlyMastersObsoleteAfterTheConfiguredMonthThreshold() {
+        var lastUpdate = java.time.ZonedDateTime.now(java.time.ZoneOffset.UTC)
+            .minusMonths(13).toInstant();
+
+        assertTrue(DossierObsolescence.isObsolete(true, lastUpdate, 12));
+        assertFalse(DossierObsolescence.isObsolete(false, lastUpdate, 12));
+        assertFalse(DossierObsolescence.isObsolete(true, java.time.Instant.now(), 12));
+    }
+
+    @Test
     void signsWebAndSharedResponsesButPersistsOnlyStableImageUrls() {
         var storage = new S3ImageStorage("test-bucket", "", "cellar.example.test", "test-key", "test-secret");
         var dossier = dossier("https://cellar.example.test/test-bucket/dossier-assets/");
@@ -46,7 +74,7 @@ class DossierImageTest {
         when(repository.findById(dossier.getId())).thenReturn(Optional.of(dossier));
         when(repository.save(any())).thenAnswer(call -> call.getArgument(0));
         var service = new DossierService(repository, mock(ProfileService.class), mock(TechSkillService.class),
-                mock(PdfService.class), storage);
+            mock(PdfService.class), storage, mock(CompanySettingsService.class));
 
         DossierDto response = service.get(dossier.getId());
         assertSigned(response);
@@ -94,7 +122,7 @@ class DossierImageTest {
             String endpoint = "http://127.0.0.1:" + server.getAddress().getPort();
             var storage = new S3ImageStorage("test-bucket", "", endpoint, "test-key", "test-secret");
             var company = mock(CompanySettingsService.class);
-            when(company.get()).thenReturn(new CompanyContactDto(null, null, null, null, null));
+            when(company.get()).thenReturn(new CompanyContactDto(null, null, null, null, null, 12));
             byte[] pdf = new PdfService(company, storage).generateDossierPdf(
                     dossier(endpoint + "/test-bucket/dossier-assets/"));
             assertEquals(3, requests.size());
@@ -141,8 +169,8 @@ class DossierImageTest {
         server.start();
         try {
             var company = mock(CompanySettingsService.class);
-            when(company.get()).thenReturn(new CompanyContactDto(null, null, null, null,
-                    "http://127.0.0.1:" + server.getAddress().getPort() + "/internal-resource"));
+                when(company.get()).thenReturn(new CompanyContactDto(null, null, null, null,
+                    "http://127.0.0.1:" + server.getAddress().getPort() + "/internal-resource", 12));
             var storage = new S3ImageStorage("test-bucket", "", "cellar.example.test", "test-key", "test-secret");
             assertTrue(new PdfService(company, storage).generateDossierPdf(dossier("https://external.example.test/")).length > 0);
             assertEquals(0, requests.get(), "Untrusted logo URLs must not trigger server-side network requests");
@@ -159,13 +187,15 @@ class DossierImageTest {
         source.addReference(reference);
         var experience = new ExperienceCompany();
         experience.setCompany("Example company");
+        experience.setStartDate(java.time.LocalDate.of(2026, 9, 1));
+        experience.setEndDate(java.time.LocalDate.of(2026, 10, 31));
         var project = new ExperienceProject();
         project.setName("Short project");
         project.setTasks("One task");
         experience.addProject(project);
         source.addExperience(experience);
         var company = mock(CompanySettingsService.class);
-        when(company.get()).thenReturn(new CompanyContactDto(null, null, null, null, null));
+        when(company.get()).thenReturn(new CompanyContactDto(null, null, null, null, null, 12));
         var storage = new S3ImageStorage("test-bucket", "", "cellar.example.test", "test-key", "test-secret");
         var reader = new PdfReader(new PdfService(company, storage).generateDossierPdf(source));
         try {
@@ -173,9 +203,11 @@ class DossierImageTest {
             String text = new com.lowagie.text.pdf.parser.PdfTextExtractor(reader).getTextFromPage(1);
             assertTrue(text.contains("Technical test"));
             assertTrue(text.contains("Reference contact"));
-            assertTrue(text.contains("EXAMPLE COMPANY"));
+            assertTrue(text.replaceAll("\\s+", " ").contains("Example company"), text);
+            assertTrue(text.contains("2 mois"));
+            assertTrue(text.contains("09/2026 - 10/2026"));
             assertTrue(text.contains("One task"));
-            assertTrue(text.replaceAll("\\s+", "").contains("1/1"));
+            assertFalse(text.replaceAll("\\s+", "").contains("1/1"));
         } finally {
             reader.close();
         }
@@ -188,7 +220,7 @@ class DossierImageTest {
                 .mapToObj(index -> "Test detail " + index + ": preserved content")
                 .collect(java.util.stream.Collectors.joining("\n")));
         var company = mock(CompanySettingsService.class);
-        when(company.get()).thenReturn(new CompanyContactDto(null, null, null, null, null));
+        when(company.get()).thenReturn(new CompanyContactDto(null, null, null, null, null, 12));
         var storage = new S3ImageStorage("test-bucket", "", "cellar.example.test", "test-key", "test-secret");
         var reader = new PdfReader(new PdfService(company, storage).generateDossierPdf(source));
         try {
@@ -204,7 +236,7 @@ class DossierImageTest {
     }
 
     @Test
-    void referenceLayoutKeepsLetterSizeRepeatedHeadersPaginationAndAllContent() throws Exception {
+    void referenceLayoutKeepsA4SizeRepeatedHeadersPaginationAndAllContent() throws Exception {
         var source = dossier("https://external.example.test/");
         source.getProfile().setFirstName("Rodrigue");
         source.getProfile().setLastName("Kengoum Gassam");
@@ -247,21 +279,21 @@ class DossierImageTest {
         }
         var company = mock(CompanySettingsService.class);
         when(company.get()).thenReturn(new CompanyContactDto("6 rue du 8 mai 1945, 75010 Paris",
-                "09 67 18 38 10", "contact@inoco.fr", null, null));
+            "09 67 18 38 10", "contact@inoco.fr", null, null, 12));
         var storage = new S3ImageStorage("test-bucket", "", "cellar.example.test", "test-key", "test-secret");
         byte[] pdf = new PdfService(company, storage).generateDossierPdf(source);
         var reader = new PdfReader(pdf);
         try {
-            assertEquals(612f, reader.getPageSize(1).getWidth());
-            assertEquals(792f, reader.getPageSize(1).getHeight());
+            assertEquals(595f, reader.getPageSize(1).getWidth());
+            assertEquals(842f, reader.getPageSize(1).getHeight());
             assertTrue(reader.getNumberOfPages() > 1);
             var extractor = new com.lowagie.text.pdf.parser.PdfTextExtractor(reader);
             StringBuilder allText = new StringBuilder();
             for (int page = 1; page <= reader.getNumberOfPages(); page++) {
                 String text = extractor.getTextFromPage(page);
                 assertTrue(text.contains("contact@inoco.fr"), "Header must repeat on page " + page);
-                assertTrue(text.replaceAll("\\s+", "").contains(page + "/" + reader.getNumberOfPages()),
-                        "Page number must include the total on page " + page);
+                assertFalse(text.replaceAll("\\s+", "").contains(page + "/" + reader.getNumberOfPages()),
+                    "The reference layout has no page number on page " + page);
                 String body = text.replaceAll("\\s+", " ")
                     .replace("6 rue du 8 mai 1945, 75010 Paris", "")
                     .replace("Tél : 09 67 18 38 10", "")
@@ -270,7 +302,7 @@ class DossierImageTest {
                 assertFalse(body.isBlank(), "Page " + page + " must contain more than its header and footer");
                 allText.append(text);
             }
-            assertTrue(allText.toString().contains("R.K.G."));
+            assertTrue(allText.toString().contains("RKG"));
             assertFalse(allText.toString().contains("Kengoum Gassam"));
             assertTrue(allText.toString().contains("Mission 2 tâche 24"));
         } finally {

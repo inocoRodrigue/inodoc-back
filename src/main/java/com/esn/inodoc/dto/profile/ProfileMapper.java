@@ -3,6 +3,7 @@ package com.esn.inodoc.dto.profile;
 import com.esn.inodoc.domain.CompetenceDossier;
 import com.esn.inodoc.domain.Profile;
 import com.esn.inodoc.dto.dossier.DossierMapper;
+import com.esn.inodoc.service.DossierObsolescence;
 
 import java.util.Optional;
 
@@ -19,6 +20,10 @@ public final class ProfileMapper {
     }
 
     public static ProfileDto toDto(Profile p, com.esn.inodoc.domain.User account) {
+        return toDto(p, account, 12);
+    }
+
+    public static ProfileDto toDto(Profile p, com.esn.inodoc.domain.User account, int staleAfterMonths) {
         return new ProfileDto(
                 p.getId(),
                 p.getFirstName(),
@@ -31,7 +36,7 @@ public final class ProfileMapper {
                 p.getAvailableFrom(),
                 p.getStatus(),
                 p.getDailyRate(),
-                p.getDossiers().stream().map(DossierMapper::toSummary).toList(),
+                p.getDossiers().stream().map(dossier -> DossierMapper.toSummary(dossier, staleAfterMonths)).toList(),
                 account == null ? null : account.getId(),
                 account == null ? null : account.getEmail(),
                 p.getCreatedAt(),
@@ -40,7 +45,13 @@ public final class ProfileMapper {
     }
 
     public static ProfileSummaryDto toSummary(Profile p) {
+        return toSummary(p, 12);
+    }
+
+    public static ProfileSummaryDto toSummary(Profile p, int staleAfterMonths) {
         Optional<CompetenceDossier> master = p.masterDossier();
+        Optional<CompetenceDossier> explicitMaster = p.getDossiers().stream()
+            .filter(CompetenceDossier::isMaster).findFirst();
         return new ProfileSummaryDto(
                 p.getId(),
                 p.getFirstName(),
@@ -51,7 +62,10 @@ public final class ProfileMapper {
                 p.getAvailabilityStatus(),
                 master.map(CompetenceDossier::getYearsOfExperience).orElse(null),
                 master.map(CompetenceDossier::getExpertiseDomain).orElse(null),
-                p.getDossiers().size());
+                p.getDossiers().size(),
+                explicitMaster.map(CompetenceDossier::getUpdatedAt).orElse(null),
+                explicitMaster.map(dossier -> DossierObsolescence.isObsolete(
+                    dossier.isMaster(), dossier.getUpdatedAt(), staleAfterMonths)).orElse(false));
     }
 
     public static void apply(Profile p, ProfileUpsertRequest r) {

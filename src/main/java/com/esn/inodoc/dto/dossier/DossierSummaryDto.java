@@ -13,5 +13,6 @@ public record DossierSummaryDto(
         String headline,
         Integer yearsOfExperience,
         String expertiseDomain,
-        Instant updatedAt) {
+        Instant updatedAt,
+        boolean obsolete) {
 }
