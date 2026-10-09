@@ -1,0 +1,221 @@
+{
+  "careerTemplate": {
+    "title": "Carnet carrière INOCO",
+    "legacyTitle": "INOCO Career Journal",
+    "description": "Suivi personnel de l'embarquement, des missions, des objectifs, des badges et des contributions. Créez une entrée par étape ou par entretien.",
+    "entrySchema": {
+      "sections": [
+        {
+          "id": "career-profile",
+          "title": "Parcours et badge",
+          "description": "Repères à actualiser au fil du parcours.",
+          "fields": [
+            { "id": "expertisePole", "type": "OPEN", "label": "Pôle d'expertise", "required": false },
+            { "id": "currentBadge", "type": "SINGLE_CHOICE", "label": "Badge actuel", "options": ["Consultant Junior N1", "Consultant Junior N2", "Consultant Confirmé N1", "Consultant Confirmé N2", "Consultant Senior", "Consultant Manager", "Consultant Senior Manager", "Consultant Ambassadeur", "Consultant Ambassadeur Senior"], "required": false },
+            { "id": "targetBadge", "type": "OPEN", "label": "Badge visé et échéance", "multiline": true, "required": false },
+            { "id": "careerGoals", "type": "OPEN", "label": "Objectifs professionnels", "multiline": true, "required": false }
+          ]
+        },
+        {
+          "id": "onboarding",
+          "title": "Embarquement",
+          "description": "Checklist issue du carnet carrière INOCO. Les éléments propres à une personne restent à compléter par elle et son manager.",
+          "fields": [
+            { "id": "onboardingChecklist", "type": "CHECKBOX_TABLE", "label": "Étapes d'intégration", "rows": ["Accéder au compte et aux outils INOCO", "Découvrir l'organisation, les pôles et les contacts utiles", "Lire le dossier de compétences et les ressources internes", "Mettre en place la signature et les supports professionnels", "Rencontrer le manager et le consultant manager", "Préparer les simulations et les tests liés au parcours", "Clarifier les règles de présence, télétravail et déclaration d'activité", "Faire le point de fin d'embarquement"], "columns": ["À faire", "En cours", "Terminé"], "required": false }
+          ]
+        },
+        {
+          "id": "mission-follow-up",
+          "title": "Suivi de mission",
+          "description": "Conserver des éléments factuels pour les points de suivi et le retour d'expérience.",
+          "fields": [
+            { "id": "missionName", "type": "OPEN", "label": "Client et mission", "required": false },
+            { "id": "missionRole", "type": "OPEN", "label": "Rôle et responsabilités", "multiline": true, "required": false },
+            { "id": "missionPeriod", "type": "OPEN", "label": "Période", "help": "Indiquez les dates de début et de fin ou la date prévisionnelle.", "required": false },
+            { "id": "missionHighlights", "type": "OPEN", "label": "Réalisations et retours client", "multiline": true, "required": false },
+            { "id": "missionDifficulties", "type": "OPEN", "label": "Difficultés, alertes et actions", "multiline": true, "required": false },
+            { "id": "missionReview", "type": "OPEN", "label": "REX de mission", "multiline": true, "required": false }
+          ]
+        },
+        {
+          "id": "badge-progress",
+          "title": "Objectifs et évolution de badge",
+          "description": "Les attendus communs sont évalués sur les faits, les retours clients et la progression professionnelle. Consultez le référentiel des badges fourni avec ce carnet.",
+          "fields": [
+            { "id": "badgeGoals", "type": "OPEN", "label": "Objectifs convenus avec le manager", "multiline": true, "required": false },
+            { "id": "badgeEvidence", "type": "OPEN", "label": "Réalisations et preuves liées aux attendus du badge", "help": "Notez le résultat, la période, les liens ou les retours vérifiables.", "multiline": true, "required": false },
+            { "id": "nextBadgeReadiness", "type": "OPEN", "label": "Compétences à développer pour le badge suivant", "multiline": true, "required": false },
+            { "id": "trainingNeeds", "type": "OPEN", "label": "Formations, certifications et accompagnement souhaités", "multiline": true, "required": false }
+          ]
+        },
+        {
+          "id": "contributions",
+          "title": "Compétences et contributions internes",
+          "fields": [
+            { "id": "expertiseGrowth", "type": "OPEN", "label": "Compétences développées et mises en pratique", "multiline": true, "required": false },
+            { "id": "knowledgeSharing", "type": "OPEN", "label": "Formations, conférences, REX et partage de connaissances", "multiline": true, "required": false },
+            { "id": "internalContributions", "type": "OPEN", "label": "Contributions aux pôles et à la vie INOCO", "multiline": true, "required": false },
+            { "id": "commercialContributions", "type": "OPEN", "label": "Contributions à l'écosystème et au développement commercial", "multiline": true, "required": false }
+          ]
+        },
+        {
+          "id": "valuable-tasks",
+          "title": "Tâches valorisables",
+          "description": "Saisissez uniquement les tâches réalisées en plus des attendus du badge. Les règles et les tâches source sont consultables dans le référentiel associé.",
+          "fields": [
+            { "id": "valuableTaskCircle", "type": "MULTI_CHOICE", "label": "Cercles concernés", "options": ["Faire progresser nos connaissances", "Faire grandir un pôle d'expertise", "Faire vivre la culture d'entreprise", "Faire rayonner INOCO"], "required": false },
+            { "id": "valuableTaskEvidence", "type": "OPEN", "label": "Tâches réalisées, quantités et éléments justificatifs", "multiline": true, "required": false },
+            { "id": "valuableTaskPoints", "type": "OPEN", "label": "Points proposés et validation manager", "help": "Les points sont à valider en entretien; ne saisissez pas de montant de rémunération confidentiel.", "multiline": true, "required": false }
+          ]
+        }
+      ]
+    }
+  },
+  "reviewForms": [
+    {
+      "title": "Préparation à l'entretien semi-annuel INOCO",
+      "legacyTitle": "INOCO Semi-Annual Review Preparation",
+      "description": "Support de préparation du collaborateur et du manager pour le bilan semestriel."
+    },
+    {
+      "title": "Préparation à l'entretien annuel INOCO",
+      "legacyTitle": "INOCO Annual Review Preparation",
+      "description": "Support de préparation du collaborateur et du manager pour le bilan annuel et les objectifs de l'année suivante."
+    }
+  ],
+  "reviewFormSchema": {
+    "sections": [
+      {
+        "id": "period-review",
+        "title": "Bilan de la période",
+        "fields": [
+          { "id": "highlights", "type": "OPEN", "label": "Tes trois faits marquants", "help": "Réalisations chez les clients et en interne.", "multiline": true, "required": true },
+          { "id": "difficulties", "type": "OPEN", "label": "Ce qui a été difficile", "help": "Missions, organisation, charge, relation client ou interne.", "multiline": true, "required": false },
+          { "id": "workload", "type": "SINGLE_CHOICE", "label": "Comment qualifierais-tu ta charge de travail globale ?", "options": ["Trop légère", "OK", "Soutenable mais dense", "Trop lourde"], "required": true },
+          { "id": "workloadComment", "type": "OPEN", "label": "Comment expliques-tu cette charge ?", "multiline": true, "required": false },
+          { "id": "workLifeBalance", "type": "SINGLE_CHOICE", "label": "Comment évalues-tu ton équilibre professionnel et personnel ?", "options": ["Ça va bien", "Quelques tensions", "Complexe à gérer"], "required": true },
+          { "id": "balanceComment", "type": "OPEN", "label": "Commentaire sur l'équilibre professionnel et personnel", "multiline": true, "required": false }
+        ]
+      },
+      {
+        "id": "goals-and-mission",
+        "title": "Objectifs, mission et ressenti",
+        "fields": [
+          { "id": "goalReview", "type": "OPEN", "label": "Bilan des objectifs fixés pour cette période", "help": "Indique les objectifs atteints, partiellement atteints ou non atteints.", "multiline": true, "required": false },
+          { "id": "missionSatisfaction", "type": "SINGLE_CHOICE", "label": "Satisfaction de ta mission actuelle", "options": ["1 - Pas du tout", "2", "3", "4", "5 - Top"], "required": true },
+          { "id": "missionSatisfactionReason", "type": "OPEN", "label": "Un mot ou un fait pour expliquer cette satisfaction", "multiline": true, "required": false },
+          { "id": "yearMood", "type": "OPEN", "label": "Ton mot-clé pour décrire la période", "required": false },
+          { "id": "nextPeriodGoals", "type": "OPEN", "label": "Tes objectifs pour la prochaine période (badge et aspirations)", "multiline": true, "required": false },
+          { "id": "midTermGoals", "type": "OPEN", "label": "Tes objectifs à moyen terme (12 à 18 mois)", "multiline": true, "required": false },
+          { "id": "longTermGoals", "type": "OPEN", "label": "Tes objectifs à plus long terme (au-delà de 18 mois)", "multiline": true, "required": false }
+        ]
+      },
+      {
+        "id": "support-and-collaboration",
+        "title": "Progression et collaboration",
+        "fields": [
+          { "id": "developmentNeeds", "type": "OPEN", "label": "Ce dont tu as besoin pour progresser", "help": "Outils, accompagnement, coaching, formation ou compétences à renforcer.", "multiline": true, "required": false },
+          { "id": "managerContinue", "type": "OPEN", "label": "Ce que ton manager doit continuer à faire", "multiline": true, "required": false },
+          { "id": "managerImprove", "type": "OPEN", "label": "Ce que ton manager pourrait améliorer", "multiline": true, "required": false },
+          { "id": "contributionsGiven", "type": "OPEN", "label": "Tes contributions internes et ce que tu as apporté", "multiline": true, "required": false },
+          { "id": "contributionsReceived", "type": "OPEN", "label": "Ce que tu as reçu de l'équipe et d'INOCO", "multiline": true, "required": false }
+        ]
+      },
+      {
+        "id": "badge-and-recognition",
+        "title": "Badge, évolution et reconnaissance",
+        "fields": [
+          { "id": "badgeChange", "type": "SINGLE_CHOICE", "label": "Souhaites-tu changer de badge ?", "options": ["Oui", "Pas pour cette période"], "required": true },
+          { "id": "desiredBadgeReason", "type": "OPEN", "label": "Badge visé et éléments qui motivent ce choix", "multiline": true, "required": false },
+          { "id": "badgeEvidence", "type": "OPEN", "label": "Éléments factuels sur les attendus de ton badge", "help": "Complète les attendus du badge dans le carnet carrière.", "multiline": true, "required": false },
+          { "id": "recognitionFacts", "type": "OPEN", "label": "Faits que tu souhaites mettre en avant", "help": "Tenue du carnet, reporting, objectifs badge, retours clients, engagements internes et montée en compétences.", "multiline": true, "required": false },
+          { "id": "progressAssessment", "type": "OPEN", "label": "Comment évalues-tu ta progression et ta contribution ?", "help": "Qualité, contribution, impact, prise d'initiative et exemplarité.", "multiline": true, "required": false },
+          { "id": "valuableTasks", "type": "OPEN", "label": "Tâches valorisables réalisées et points proposés", "help": "À rapprocher du référentiel des tâches valorisables; validation en entretien.", "multiline": true, "required": false }
+        ]
+      },
+      {
+        "id": "closing",
+        "title": "Conclusion",
+        "fields": [
+          { "id": "otherTopics", "type": "OPEN", "label": "Autres points à aborder", "multiline": true, "required": false }
+        ]
+      }
+    ]
+  },
+  "referenceDocuments": [
+    {
+      "title": "Référentiel des badges et tâches attendues INOCO 2026",
+      "legacyTitle": "INOCO Badge and Expected Tasks Reference 2026",
+      "description": "Niveaux, tâches et volumes issus des documents badges et du classeur de suivi 2026. Les tâches sans quantité source doivent être cadrées avec le manager.",
+      "category": "Carrière",
+      "content": {
+        "blocks": [
+          { "type": "paragraph", "text": "Les attendus communs sont répartis entre la réussite de la mission client (50 %), la posture d'excellence et le respect des cadres INOCO (25 %), et l'évolution de carrière (25 %). La tenue du carnet carrière, le reporting et les retours clients contribuent à l'évaluation. Les objectifs quantitatifs peuvent être révisés avec les retours annuels et les objectifs de l'entreprise." },
+          { "type": "list", "items": ["Consultant Junior N1 - premières expériences, parcours de recrutement et embarquement validés.", "Consultant Junior N2 - expérience professionnelle consolidée et progression vers le badge Confirmé N1.", "Consultant Confirmé N1 - autonomie, partage et contribution au pôle.", "Consultant Confirmé N2 - animation, entretiens et contribution aux projets de l'Agence.", "Consultant Senior - rayonnement, structuration d'expertise et mentorat.", "Consultant Manager - accompagnement d'équipe, carrière et impact commercial.", "Consultant Senior Manager - au moins deux ans au badge Manager et douze ans d'expérience post-diplôme selon le document fourni.", "Consultant Ambassadeur - rayonnement externe et structuration d'offres et de standards.", "Consultant Ambassadeur Senior - niveau présent dans le classeur, sans tâches quantitatives spécifiques renseignées."] },
+          { "type": "heading", "text": "Consultant Junior N1" },
+          { "type": "table", "columns": ["Tâche", "Attendu source"], "rows": [["Participer à des formations internes INOCO", "2 par an"], ["Participer à des conférences internes (REX par exemple)", "2 par an"], ["Participer à des conférences externes", "1 par an"], ["Construire un plan de progression vers le badge supérieur avec le manager ou consultant manager", "Réalisé"], ["Valider un test en adéquation avec son expertise à 95 % minimum", "1"]] },
+          { "type": "heading", "text": "Consultant Junior N2" },
+          { "type": "table", "columns": ["Tâche", "Attendu source"], "rows": [["Gagner une intervention sur un projet et l'intégrer", "Réalisé"], ["Obtenir des retours positifs sur son intervention", "Réalisé"], ["Participer à des conférences externes", "2"], ["Participer à des conférences internes", "2"], ["Participer à des formations internes INOCO", "2"], ["Construire un plan de progression vers le badge supérieur", "Réalisé"], ["Valider un test en adéquation avec son expertise à 95 % minimum", "1 par durée du badge"], ["Partager des connaissances (article de blog, INOCONF)", "2"], ["Assister à des E2 pour apprendre à les mener en autonomie", "2 par durée du badge"]] },
+          { "type": "heading", "text": "Consultant Confirmé N1" },
+          { "type": "table", "columns": ["Tâche", "Attendu source"], "rows": [["Obtenir une certification sur un sujet complémentaire", "1 par durée du badge"], ["Participer à des conférences internes", "3 par an"], ["Participer à des événements externes", "2 par an"], ["Partager des connaissances (article de blog, INOCONF)", "3 par an"], ["Valider un test d'expertise à 95 % minimum", "1 par durée du badge"], ["Réaliser des E2", "2 par an"], ["Participer aux projets de l'Agence (validation de PR, etc.)", "Réalisé"]] },
+          { "type": "heading", "text": "Consultant Confirmé N2" },
+          { "type": "table", "columns": ["Tâche", "Attendu source"], "rows": [["Animer des conférences internes", "1 par an"], ["Organiser, participer ou animer des événements externes", "3 par durée du badge"], ["Partager des connaissances (article de blog)", "3 par an"], ["Réaliser des E2", "3 par an"], ["Participer aux projets de l'Agence", "Réalisé"], ["Évaluer techniquement les demandes d'évolution de badges", "1 par an"], ["Valider un test d'expertise à 95 % minimum", "1 par durée du badge"]] },
+          { "type": "heading", "text": "Consultant Senior" },
+          { "type": "table", "columns": ["Tâche", "Attendu source"], "rows": [["Formaliser la reconnaissance de sa prestation par le client", "Réalisé"], ["Identifier et partager des événements extérieurs", "Réalisé"], ["Animer des formations internes", "1 par an"], ["Organiser et animer un événement externe", "1 par an"], ["Partager des connaissances (article, INOCONF)", "4 par an"], ["Réaliser des E2", "3 par an"], ["Contribuer à un projet de l'Agence", "Réalisé"], ["Valider un test d'expertise à 95 % minimum", "1 par durée du badge"], ["Suivre une formation préparatoire au badge suivant", "1"], ["Veiller à la présence d'INOCO aux événements extérieurs", "Réalisé"], ["Assister à des rendez-vous de consultants Ambassadeurs et Managers", "2"], ["Manager au moins un consultant plus junior", "Réalisé"]] },
+          { "type": "heading", "text": "Consultant Manager" },
+          { "type": "list", "items": ["Préparer les entretiens annuels et semi-annuels des collaborateurs suivis.", "Préparer et suivre les objectifs de l'année et les objectifs de badge.", "Recueillir les difficultés et se positionner sur l'évolution des consultants.", "Organiser des temps de partage, de convivialité et de capitalisation.", "Identifier les besoins de formation, cartographier les compétences et définir les plans de progression.", "Participer au recrutement, réaliser des E2 et faire évoluer les évaluations.", "Formaliser et faire adopter des standards d'ingénierie.", "Proposer des évolutions structurelles et contribuer à la structuration de l'Agence.", "Contribuer à l'impact commercial, aux rendez-vous clients et à la reconnaissance des prestations."] },
+          { "type": "heading", "text": "Consultant Senior Manager" },
+          { "type": "paragraph", "text": "Le document fourni demande au minimum deux ans au badge Manager, douze ans d'expérience post-diplôme, l'atteinte des objectifs annuels et une capacité démontrée de mentorat ou de pilotage d'initiatives transverses. Le classeur 2026 ne fournit pas de quantité de tâches distincte pour ce badge." },
+          { "type": "heading", "text": "Consultant Ambassadeur" },
+          { "type": "list", "items": ["Contribuer à la crédibilité des offres, à la veille et aux formations.", "Former des formateurs, formaliser et assurer des formations.", "Réaliser des E2 et contribuer aux tests d'évaluation.", "Planifier des événements et réaliser des interventions externes à fort impact.", "Produire des contenus externes et maintenir une présence sur les réseaux professionnels.", "Développer des synergies avec les clients, éditeurs, écoles et incubateurs.", "Formaliser des standards, proposer des évolutions structurelles et contribuer à l'impact commercial."] },
+          { "type": "heading", "text": "Consultant Ambassadeur Senior" },
+          { "type": "paragraph", "text": "Ce niveau apparaît dans le classeur 2026, mais aucun attendu quantitatif ou document de badge dédié n'a été fourni. Définir les attendus avec la direction avant de les suivre." },
+          { "type": "paragraph", "text": "Les documents rappellent également le respect des règles de congés et télétravail, la déclaration d'activité avant le 25 du mois, la communication des absences et changements, la disponibilité selon les horaires convenus, la tenue du carnet et l'organisation d'un retour d'expérience à la fin d'une mission." }
+        ]
+      }
+    },
+    {
+      "title": "Tâches valorisables INOCO 2025",
+      "legacyTitle": "INOCO Recognized Contributions 2025",
+      "description": "Tâches supplémentaires, cercles d'influence, quantités et points issus du classeur fourni.",
+      "category": "Carrière",
+      "content": {
+        "blocks": [
+          { "type": "paragraph", "text": "Seules les tâches réalisées en plus des attendus du badge sont valorisables. Les points sont examinés lors des entretiens semi-annuels ou annuels; leur conversion reste à valider." },
+          { "type": "table", "columns": ["Points", "Prime brute", "Congés repos"], "rows": [["3", "150 euros", "Aucun indiqué"], ["5", "400 euros", "0,5 jour"], ["10", "1 000 euros", "1,5 jour"]] },
+          { "type": "heading", "text": "Faire progresser nos connaissances" },
+          { "type": "table", "columns": ["Tâche", "Quantité", "Points"], "rows": [["Organiser des temps de partage (veille, ateliers pratiques)", "2", "2"], ["Assister activement aux présentations REX de fin de mission", "3", "1"], ["Formaliser et faire valider des standards d'ingénierie pour son pôle", "2", "2"], ["Créer et faire valider des formations internes", "1", "6"], ["Animer des formations", "1", "4"], ["Assister à des formations internes INOCO", "3", "2"], ["Animer une INOCONF interne", "1", "2"]] },
+          { "type": "heading", "text": "Faire grandir un pôle d'expertise" },
+          { "type": "table", "columns": ["Tâche", "Quantité", "Points"], "rows": [["Assister à des E2 pour apprendre à les mener en autonomie", "3", "2"], ["Réaliser des E2", "3", "4"], ["Contribuer aux tests d'évaluation des candidats et ressources", "1", "2"], ["Manager des consultants plus juniors", "1", "6"], ["Coopter un candidat après préqualification", "2", "2"], ["Être à l'origine du recrutement d'un nouveau collègue", "1", "6"]] },
+          { "type": "heading", "text": "Faire vivre la culture d'entreprise" },
+          { "type": "table", "columns": ["Tâche", "Quantité", "Points"], "rows": [["Proposer des recommandations d'évolution structurelle", "1", "2"], ["Organiser des moments de convivialité en interne", "2", "2"], ["Organiser un moment de convivialité avec l'équipe client", "1", "4"], ["Inviter des personnes pertinentes de son réseau à un événement INOCO", "1", "1"], ["Parrainer ou marrainer un nouveau collègue", "1", "3"], ["Travailler dans les bureaux une fois par mois en mission client", "12 par an", "3"]] },
+          { "type": "heading", "text": "Faire rayonner INOCO" },
+          { "type": "table", "columns": ["Tâche", "Quantité", "Points"], "rows": [["Organiser un événement externe", "1", "4"], ["Participer à un événement externe", "2", "2"], ["Animer une conférence devant un public externe", "1", "4"], ["Contribuer à une communication externe", "2", "4"], ["Ajouter des contacts professionnels pertinents sur LinkedIn", "10", "1"], ["Animer une conférence au Devoxx", "1", "6"], ["Organiser un déjeuner client avec un collègue INOCO pertinent", "1", "4"], ["Identifier des contacts potentiels dans son réseau école/faculté", "5", "2"], ["Partager au manager les départs ou renforts potentiels d'une équipe client", "2", "2"], ["Qualifier un besoin avec son manager et organiser un rendez-vous commercial", "1", "2"], ["Qualifier un besoin en autonomie", "1", "3"], ["Partager le dossier de compétences d'un collègue pertinent au client", "1", "2"], ["Faire démarrer le projet correspondant au besoin qualifié", "1", "7"], ["Mettre en relation et contribuer à signer deux prestations chez un nouveau client", "1", "10"]] }
+        ]
+      }
+    },
+    {
+      "title": "Guide de préparation aux entretiens INOCO",
+      "legacyTitle": "INOCO Annual Review Preparation Guide",
+      "description": "Questions du guide de préparation annuel et semi-annuel transmis.",
+      "category": "Entretiens",
+      "content": {
+        "blocks": [
+          { "type": "list", "items": ["Tes trois faits marquants de l'année, côté client et interne.", "Ce qui a été difficile: mission, organisation, charge, relation client ou interne.", "Ta charge de travail et les raisons de ton ressenti.", "Ton équilibre professionnel et personnel.", "Le bilan des objectifs fixés pour l'année.", "Ta satisfaction de la mission actuelle, sur une échelle de 1 à 5.", "Ton humeur générale et ton mot-clé de l'année.", "Tes objectifs pour l'année à venir, badge et aspirations.", "Tes objectifs d'évolution à moyen terme (12 à 18 mois) et à long terme.", "Tes besoins pour progresser: outils, accompagnement, coaching, formation et compétences.", "Ce que ton manager doit continuer à faire et ce qu'il peut améliorer.", "Tes contributions internes: ce que tu as apporté et reçu.", "Ton badge actuel, les attendus et ton souhait d'évolution.", "Les faits qui étayent ta progression et ta contribution.", "Les tâches valorisables réalisées en plus des attendus du badge.", "Les autres sujets que tu souhaites aborder."] },
+          { "type": "paragraph", "text": "Le document prévoit un échange de 55 minutes en présentiel. Le créneau est à convenir avec le manager et à vérifier au regard des rendez-vous client." }
+        ]
+      }
+    },
+    {
+      "title": "Checklist de mise à jour du dossier de compétences",
+      "legacyTitle": "Competence Dossier Update Checklist",
+      "description": "Repères pour conserver un dossier de compétences utile aux missions et aux échanges carrière.",
+      "category": "Dossier de compétences",
+      "content": {
+        "blocks": [
+          { "type": "list", "items": ["Vérifier l'identité et les coordonnées professionnelles.", "Mettre à jour le titre, le domaine d'expertise et le résumé à partir d'éléments vérifiables.", "Actualiser les compétences, technologies, langues, formations et certifications.", "Décrire les expériences avec contexte, rôle, dates et résultats.", "Documenter les projets, responsabilités, méthodes, tâches et technologies.", "Ne pas inclure de données personnelles ou d'identifiants non nécessaires.", "Faire relire les informations et vérifier leur exactitude avant de partager le dossier."] }
+        ]
+      }
+    }
+  ]
+}

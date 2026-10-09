@@ -1,0 +1,15 @@
+target/
+.git/
+.gitignore
+.idea/
+*.iml
+.mvn/
+!.mvn/wrapper/maven-wrapper.jar
+docker-compose*.yml
+deploy/
+*.log
+.env*
+**/*.key
+**/*.pem
+**/*.p12
+**/*.pfx
