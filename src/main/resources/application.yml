@@ -1,5 +1,5 @@
 server:
-  port: ${PORT:8080}
+  port: ${PORT}
   error:
     include-message: never
     include-stacktrace: never
@@ -9,16 +9,16 @@ server:
       cookie:
         http-only: true
         same-site: lax
-        secure: ${SESSION_COOKIE_SECURE:true}
+        secure: ${SESSION_COOKIE_SECURE}
 
 spring:
   application:
     name: inodoc-backend
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${POSTGRESQL_ADDON_HOST:localhost}:${POSTGRESQL_ADDON_PORT:5432}/${POSTGRESQL_ADDON_DB:inodoc}}
-    username: ${POSTGRESQL_ADDON_USER:}
-    password: ${POSTGRESQL_ADDON_PASSWORD:}
+    url: jdbc:postgresql://${POSTGRESQL_ADDON_HOST}:${POSTGRESQL_ADDON_PORT}/${POSTGRESQL_ADDON_DB}
+    username: ${POSTGRESQL_ADDON_USER}
+    password: ${POSTGRESQL_ADDON_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -48,52 +48,52 @@ spring:
 inodoc:
   ai:
     tls:
-      skip-certificate-verification: ${AI_TLS_SKIP_CERTIFICATE_VERIFICATION:false}
-      trust-store-type: ${AI_TLS_TRUST_STORE_TYPE:JVM}
-      trust-store: ${AI_TLS_TRUST_STORE:}
-      trust-store-password: ${AI_TLS_TRUST_STORE_PASSWORD:}
-    base-url: ${AI_MODEL_BASE_URL:https://api.openai.com/v1}
-    api-key: ${AI_MODEL_API_KEY:}
-    model: ${AI_MODEL_NAME:gpt-5.4-mini}
+      skip-certificate-verification: ${AI_TLS_SKIP_CERTIFICATE_VERIFICATION}
+      trust-store-type: ${AI_TLS_TRUST_STORE_TYPE}
+      trust-store: ${AI_TLS_TRUST_STORE}
+      trust-store-password: ${AI_TLS_TRUST_STORE_PASSWORD}
+    base-url: ${AI_MODEL_BASE_URL}
+    api-key: ${AI_MODEL_API_KEY}
+    model: ${AI_MODEL_NAME}
   media:
-    bucket: ${S3_BUCKET:${AWS_S3_BUCKET_NAME:s3dev}}
-    region: ${AWS_REGION:us-east-1}
-    endpoint: ${CELLAR_ADDON_HOST:cellar-c2.services.clever-cloud.com}
-    access-key: ${CELLAR_ADDON_KEY_ID:}
-    secret-key: ${CELLAR_ADDON_KEY_SECRET:}
+    bucket: ${S3_BUCKET}
+    region: ${AWS_REGION}
+    endpoint: ${CELLAR_ADDON_HOST}
+    access-key: ${CELLAR_ADDON_KEY_ID}
+    secret-key: ${CELLAR_ADDON_KEY_SECRET}
   app:
     # Nom commercial affiche dans l'interface (surchargabilite via INODOC_APP_NAME).
-    name: ${INODOC_APP_NAME:inoDoc}
-    version: ${INODOC_APP_VERSION:1.0.0}
+    name: ${INODOC_APP_NAME}
+    version: ${INODOC_APP_VERSION}
   admin:
-    email: ${INODOC_ADMIN_EMAIL:}
-    password: ${INODOC_ADMIN_PASSWORD:}
-    first-name: ${INODOC_ADMIN_FIRST_NAME:Admin}
-    last-name: ${INODOC_ADMIN_LAST_NAME:inoDoc}
+    email: ${INODOC_ADMIN_EMAIL}
+    password: ${INODOC_ADMIN_PASSWORD}
+    first-name: ${INODOC_ADMIN_FIRST_NAME}
+    last-name: ${INODOC_ADMIN_LAST_NAME}
   demo:
-    enabled: ${INODOC_DEMO_DATA:false}
+    enabled: ${INODOC_DEMO_DATA}
   sso:
     # Liste des domaines email autorises a se connecter (separes par des virgules).
-    allowed-domains: ${INODOC_SSO_ALLOWED_DOMAINS:inoco.fr}
+    allowed-domains: ${INODOC_SSO_ALLOWED_DOMAINS}
     google:
-      login-redirect-uri: ${GOOGLE_LOGIN_REDIRECT_URI:http://localhost:8080/api/auth/google/callback}
-      success-redirect: ${GOOGLE_LOGIN_SUCCESS_REDIRECT:http://localhost:4200/auth/callback}
+      login-redirect-uri: ${GOOGLE_LOGIN_REDIRECT_URI}
+      success-redirect: ${GOOGLE_LOGIN_SUCCESS_REDIRECT}
   security:
     jwt:
       secret: ${INODOC_JWT_SECRET}
       access-token-validity-minutes: 30
       refresh-token-validity-days: 7
   cors:
-    allowed-origins: ${INODOC_CORS_ALLOWED_ORIGINS:http://localhost:4200}
+    allowed-origins: ${INODOC_CORS_ALLOWED_ORIGINS}
   share:
-    base-url: ${INODOC_SHARE_BASE_URL:http://localhost:4200/share}
+    base-url: ${INODOC_SHARE_BASE_URL}
   mail:
     secret-key: ${INODOC_MAIL_SECRET_KEY}
     google:
-      client-id: ${GOOGLE_CLIENT_ID:}
-      client-secret: ${GOOGLE_CLIENT_SECRET:}
-      redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8080/api/mail-accounts/oauth/callback}
-      success-redirect: ${GOOGLE_SUCCESS_REDIRECT:http://localhost:4200/settings}
+      client-id: ${GOOGLE_CLIENT_ID}
+      client-secret: ${GOOGLE_CLIENT_SECRET}
+      redirect-uri: ${GOOGLE_REDIRECT_URI}
+      success-redirect: ${GOOGLE_SUCCESS_REDIRECT}
 
 logging:
   level:

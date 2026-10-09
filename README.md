@@ -8,7 +8,10 @@ Java 17, Spring Boot 3.5, PostgreSQL, Flyway et JWT.
 Le fichier `.env` a la racine du backend est ignore par Git et charge par Spring
 avec `optional:file:.env[.properties]`. Utiliser le format `CLE=valeur`, sans
 guillemets de shell. Ne jamais versionner ce fichier. `.env.example` contient
-uniquement les noms de variables, sans secret.
+les variables et des valeurs locales non secretes, sans identifiant reel.
+Toutes les variables referencees dans `application.yml` figurent dans les deux
+fichiers. Le YAML ne fournit aucune valeur de repli : definir chaque variable,
+meme avec une valeur vide pour les options facultatives.
 
 Avec une base PostgreSQL accessible et les variables renseignees :
 
@@ -37,9 +40,11 @@ pour les options JVM. Aucun script de publication ou d'orchestration n'est requi
 Les variables sont fournies a l'execution par la plateforme. Les variables de
 l'environnement ont priorite sur le `.env` local.
 
-- Base : `SPRING_DATASOURCE_URL` (JDBC) ou `POSTGRESQL_ADDON_HOST`,
-  `POSTGRESQL_ADDON_PORT`, `POSTGRESQL_ADDON_DB`, puis `POSTGRESQL_ADDON_USER`
-  et `POSTGRESQL_ADDON_PASSWORD`.
+- Base : `POSTGRESQL_ADDON_HOST`, `POSTGRESQL_ADDON_PORT`, `POSTGRESQL_ADDON_DB`,
+  `POSTGRESQL_ADDON_USER` et `POSTGRESQL_ADDON_PASSWORD`. L'URL JDBC est construite
+  avec l'hote, le port et le nom de base. `POSTGRESQL_ADDON_URI` et
+  `POSTGRESQL_ADDON_VERSION` sont conserves dans les fichiers d'environnement
+  pour les informations de l'addon, mais ne sont pas utilises par le pilote JDBC.
 - Obligatoires : `INODOC_JWT_SECRET` et `INODOC_MAIL_SECRET_KEY`, chacune une cle
   Base64 aleatoire d'au moins 32 octets. Une cle mail existante chiffre les tokens
   Google deja stockes : son changement necessite leur reconnexion.
@@ -104,9 +109,9 @@ L'identite RH (`Profile`) est distincte des versions de competences
 
 | Variable | Usage |
 | --- | --- |
-| `AI_MODEL_BASE_URL` | URL compatible OpenAI, par defaut `https://api.openai.com/v1` |
-| `AI_MODEL_API_KEY` | Cle du fournisseur, sans valeur par defaut |
-| `AI_MODEL_NAME` | Modele, par defaut `gpt-4o-mini` |
+| `AI_MODEL_BASE_URL` | URL compatible OpenAI, exemple local `https://api.openai.com/v1` |
+| `AI_MODEL_API_KEY` | Cle du fournisseur, vide dans le fichier exemple |
+| `AI_MODEL_NAME` | Modele choisi, exemple local `gpt-5.4-mini` |
 
 Le fournisseur doit supporter `/chat/completions` et le mode JSON
 `response_format: {"type":"json_object"}`. HTTPS est requis, sauf pour une API
@@ -191,10 +196,9 @@ Pour Clever Cloud Cellar, definir les variables suivantes :
 Le client utilise cet endpoint en mode path-style et les identifiants explicites.
 Les secrets restent dans les variables d'environnement, jamais dans le YAML.
 `CELLAR_ADDON_KEY_ID` doit contenir la cle d'acces, et `CELLAR_ADDON_KEY_SECRET`
-la cle secrete : ne pas inverser les deux. Les fichiers Compose transmettent ces
-variables au conteneur. Pour un lancement local Java/Maven, definir les variables
-dans l'environnement du processus ou de la configuration de lancement VS Code ;
-Spring Boot ne charge pas automatiquement un fichier `.env`.
+la cle secrete : ne pas inverser les deux. Pour un lancement local Java/Maven,
+renseigner le `.env` charge par `spring.config.import`, ou definir les variables
+dans l'environnement du processus ou de la configuration de lancement VS Code.
 
 Un refus HTTP 401/403 affiche une erreur d'identifiants ou de droits, distincte
 d'un probleme de connexion. Les logs indiquent le statut et le code d'erreur S3,
