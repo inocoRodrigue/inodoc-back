@@ -64,6 +64,14 @@ class DossierImageTest {
         assertTrue(DossierObsolescence.isObsolete(true, lastUpdate, 12));
         assertFalse(DossierObsolescence.isObsolete(false, lastUpdate, 12));
         assertFalse(DossierObsolescence.isObsolete(true, java.time.Instant.now(), 12));
+
+        var master = mock(CompetenceDossier.class);
+        when(master.isMaster()).thenReturn(true);
+        when(master.getUpdatedAt()).thenReturn(lastUpdate);
+        assertTrue(DossierMapper.toSummary(master, 12).obsolete());
+
+        when(master.isMaster()).thenReturn(false);
+        assertFalse(DossierMapper.toSummary(master, 12).obsolete());
     }
 
     @Test
@@ -287,6 +295,23 @@ class DossierImageTest {
             assertEquals(595f, reader.getPageSize(1).getWidth());
             assertEquals(842f, reader.getPageSize(1).getHeight());
             assertTrue(reader.getNumberOfPages() > 1);
+            int embeddedImages = 0;
+            int firstPageImages = 0;
+            for (int page = 1; page <= reader.getNumberOfPages(); page++) {
+                var resources = reader.getPageN(page).getAsDict(PdfName.RESOURCES);
+                var objects = resources.getAsDict(PdfName.XOBJECT);
+                if (objects == null) continue;
+                for (Object name : objects.getKeys()) {
+                    var object = PdfReader.getPdfObject(objects.get((PdfName) name));
+                    if (object instanceof com.lowagie.text.pdf.PdfDictionary dictionary
+                            && PdfName.IMAGE.equals(dictionary.getAsName(PdfName.SUBTYPE))) {
+                        embeddedImages++;
+                        if (page == 1) firstPageImages++;
+                    }
+                }
+            }
+            assertTrue(embeddedImages >= 4);
+            assertTrue(firstPageImages >= 3, "Reference section labels and divider must be embedded on page one");
             var extractor = new com.lowagie.text.pdf.parser.PdfTextExtractor(reader);
             StringBuilder allText = new StringBuilder();
             for (int page = 1; page <= reader.getNumberOfPages(); page++) {

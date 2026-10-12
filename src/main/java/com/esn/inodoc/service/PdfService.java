@@ -11,6 +11,9 @@ import com.esn.inodoc.domain.Profile;
 import com.esn.inodoc.domain.SkillGroup;
 import com.esn.inodoc.domain.TestResult;
 import com.esn.inodoc.dto.company.CompanyContactDto;
+import org.apache.batik.transcoder.TranscoderInput;
+import org.apache.batik.transcoder.TranscoderOutput;
+import org.apache.batik.transcoder.image.PNGTranscoder;
 import com.lowagie.text.Chunk;
 import com.lowagie.text.Document;
 import com.lowagie.text.Element;
@@ -30,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
@@ -89,9 +93,9 @@ public class PdfService {
                     under.rectangle(0, 0, page.getPageSize().getWidth(), page.getPageSize().getHeight());
                     under.fill();
                     under.setColorFill(BRAND_ACCENT);
-                    under.circle(page.getPageSize().getWidth(), 0, 45);
+                    under.circle(page.getPageSize().getWidth(), 0, 43.5f);
                     under.fill();
-                    under.circle(page.getPageSize().getWidth() - 75, 17, 8);
+                    under.circle(page.getPageSize().getWidth() - 67.2f, 30f, 7.5f);
                     under.fill();
                     under.restoreState();
                     var canvas = current.getDirectContent();
@@ -100,7 +104,7 @@ public class PdfService {
                     if (logo != null) {
                         logo.scaleToFit(80, 28);
                         logo.setAbsolutePosition(page.right() + 30 - logo.getScaledWidth(),
-                                page.getPageSize().getHeight() - logo.getScaledHeight() - 3);
+                            top - (50 + logo.getScaledHeight()) / 2 - 11);
                         try {
                             canvas.addImage(logo);
                         } catch (com.lowagie.text.DocumentException e) {
@@ -336,7 +340,7 @@ public class PdfService {
     }
 
     private PdfPTable experienceHeader(ExperienceCompany experience) {
-        PdfPTable header = new PdfPTable(new float[]{1.05f, 1.55f, 3.8f});
+        PdfPTable header = new PdfPTable(new float[]{1f, 1f, 1f});
         header.setWidthPercentage(100);
         header.setSpacingBefore(2);
         header.setSpacingAfter(14);
@@ -410,10 +414,8 @@ public class PdfService {
     private PdfPCell cardCell() {
         PdfPCell cell = new PdfPCell();
         cell.setBackgroundColor(CARD_BG);
-        cell.setBorderColor(BRAND_INK);
-        cell.setBorderWidth(0.8f);
+        cell.setBorder(PdfPCell.NO_BORDER);
         cell.setPadding(6);
-        cell.setUseVariableBorders(true);
         return cell;
     }
 
@@ -523,12 +525,23 @@ public class PdfService {
     private void section(Document document, String title) {
         String label = title.toUpperCase(Locale.FRENCH);
         PdfPTable heading = new PdfPTable(1);
+        heading.setSpacingBefore(10);
+        heading.setSpacingAfter(8);
+        heading.setHorizontalAlignment(Element.ALIGN_LEFT);
+        Image referenceLabel = referenceLabel(title);
+        if (referenceLabel != null) {
+            heading.setTotalWidth(referenceLabel.getScaledWidth());
+            heading.setLockedWidth(true);
+            PdfPCell cell = new PdfPCell(referenceLabel, false);
+            cell.setBorder(PdfPCell.NO_BORDER);
+            cell.setPadding(0);
+            heading.addCell(cell);
+            document.add(heading);
+            return;
+        }
         float labelWidth = SECTION.getCalculatedBaseFont(false).getWidthPoint(label, SECTION.getSize()) + 34;
         heading.setTotalWidth(labelWidth);
         heading.setLockedWidth(true);
-        heading.setHorizontalAlignment(Element.ALIGN_LEFT);
-        heading.setSpacingBefore(10);
-        heading.setSpacingAfter(8);
         PdfPCell cell = new PdfPCell(new Phrase(label, SECTION));
         cell.setBorder(PdfPCell.NO_BORDER);
         cell.setPaddingLeft(8);
@@ -565,12 +578,23 @@ public class PdfService {
     private void fieldTag(Document document, String title) throws com.lowagie.text.DocumentException {
         String label = title.toUpperCase(Locale.FRENCH);
         PdfPTable heading = new PdfPTable(1);
-        float labelWidth = FIELD_TAG.getCalculatedBaseFont(false).getWidthPoint(label, FIELD_TAG.getSize()) + 32;
-        heading.setTotalWidth(labelWidth);
-        heading.setLockedWidth(true);
         heading.setHorizontalAlignment(Element.ALIGN_LEFT);
         heading.setSpacingBefore(6);
         heading.setSpacingAfter(2);
+        Image referenceLabel = referenceLabel(title);
+        if (referenceLabel != null) {
+            heading.setTotalWidth(referenceLabel.getScaledWidth());
+            heading.setLockedWidth(true);
+            PdfPCell cell = new PdfPCell(referenceLabel, false);
+            cell.setBorder(PdfPCell.NO_BORDER);
+            cell.setPadding(0);
+            heading.addCell(cell);
+            document.add(heading);
+            return;
+        }
+        float labelWidth = FIELD_TAG.getCalculatedBaseFont(false).getWidthPoint(label, FIELD_TAG.getSize()) + 32;
+        heading.setTotalWidth(labelWidth);
+        heading.setLockedWidth(true);
         PdfPCell cell = new PdfPCell(new Phrase(label, FIELD_TAG));
         cell.setBorder(PdfPCell.NO_BORDER);
         cell.setPaddingLeft(6);
@@ -606,34 +630,84 @@ public class PdfService {
 
     private PdfPTable goldThread() {
         PdfPTable thread = new PdfPTable(1);
+        Image image = referenceSvgImage("thread.svg", 330, 35);
+        if (image != null) {
+            float width = 247.5f;
+            image.scaleToFit(width, width * 35f / 330f);
+            thread.setTotalWidth(width);
+            thread.setLockedWidth(true);
+            thread.setHorizontalAlignment(Element.ALIGN_LEFT);
+            thread.setSpacingBefore(18);
+            thread.setSpacingAfter(10);
+            PdfPCell cell = new PdfPCell(image, false);
+            cell.setBorder(PdfPCell.NO_BORDER);
+            cell.setPadding(0);
+            thread.addCell(cell);
+            return thread;
+        }
         thread.setWidthPercentage(100);
-        thread.setSpacingBefore(4);
-        thread.setSpacingAfter(8);
+        thread.setSpacingBefore(18);
+        thread.setSpacingAfter(10);
         PdfPCell cell = new PdfPCell();
         cell.setBorder(PdfPCell.NO_BORDER);
         cell.setPadding(0);
-        cell.setFixedHeight(28);
+        cell.setFixedHeight(26);
         cell.setCellEvent((current, bounds, canvases) -> {
             var canvas = canvases[PdfPTable.BACKGROUNDCANVAS];
-            float start = bounds.getLeft() + 6;
-            float end = Math.min(start + 205, bounds.getRight() - 6);
-            float centerY = bounds.getBottom() + bounds.getHeight() / 2;
+            float scale = 247.5f / 330f;
+            float svgBottom = bounds.getBottom() + (bounds.getHeight() - 35f * scale) / 2;
+            float originX = bounds.getLeft();
             canvas.saveState();
             canvas.setColorStroke(BRAND_ACCENT);
-            canvas.setLineWidth(2.2f);
+            canvas.setLineWidth(5f * scale);
             canvas.setLineCap(1);
-            canvas.moveTo(start, centerY);
-            canvas.curveTo(start + 45, centerY + 10, start + 68, centerY + 10, start + 104, centerY);
-            canvas.curveTo(start + 143, centerY - 10, start + 171, centerY - 10, end, centerY + 2);
+            canvas.moveTo(originX + 2.50043f * scale, svgBottom + (35f - 17.2757f) * scale);
+            canvas.curveTo(originX + 29.8338f * scale, svgBottom + (35f - 1.77573f) * scale,
+                originX + 97.5004f * scale, svgBottom + (35f + 6.22426f) * scale,
+                originX + 164f * scale, svgBottom + (35f - 17.2757f) * scale);
+            canvas.curveTo(originX + 228.651f * scale, svgBottom + (35f - 40.122f) * scale,
+                originX + 287.834f * scale, svgBottom + (35f - 32.7757f) * scale,
+                originX + 317.5f * scale, svgBottom + (35f - 17.2757f) * scale);
             canvas.stroke();
             canvas.setColorFill(BRAND_ACCENT);
-            canvas.circle(start, centerY, 2.5f);
-            canvas.circle(end, centerY + 2, 2.5f);
+            canvas.circle(originX + 325.5f * scale, svgBottom + (35f - 11.2757f) * scale, 4f * scale);
             canvas.fill();
             canvas.restoreState();
         });
         thread.addCell(cell);
         return thread;
+    }
+
+    private Image referenceLabel(String title) {
+        return switch (title.toLowerCase(Locale.FRENCH)) {
+            case "résumé" -> referenceSvgImage("summary.svg", 105, 28);
+            case "formations et certifications" -> referenceSvgImage("education.svg", 282, 28);
+            case "compétences" -> referenceSvgImage("skills.svg", 155, 28);
+            case "rôle" -> referenceSvgImage("role.svg", 83, 28);
+            case "projet" -> referenceSvgImage("project.svg", 102, 28);
+            case "tâches" -> referenceSvgImage("tasks.svg", 103, 28);
+            case "environnement" -> referenceSvgImage("environment.svg", 170, 28);
+            default -> null;
+        };
+    }
+
+    private Image referenceSvgImage(String fileName, int width, int height) {
+        try (InputStream source = getClass().getResourceAsStream("/dossier-labels/" + fileName)) {
+            if (source == null) return null;
+            float rasterScale = 4f;
+            PNGTranscoder transcoder = new PNGTranscoder();
+            transcoder.addTranscodingHint(PNGTranscoder.KEY_WIDTH, width * rasterScale);
+            transcoder.addTranscodingHint(PNGTranscoder.KEY_HEIGHT, height * rasterScale);
+            ByteArrayOutputStream raster = new ByteArrayOutputStream();
+            transcoder.transcode(new TranscoderInput(source), new TranscoderOutput(raster));
+            Image image = Image.getInstance(raster.toByteArray());
+            image.scalePercent(18.75f);
+            return image;
+        } catch (Exception e) {
+            log.warn("Dossier SVG omitted from PDF: asset={}, type={}", fileName,
+                    e.getClass().getSimpleName());
+            return null;
+        }
     }
 
     private Paragraph spacer() {
