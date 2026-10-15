@@ -31,6 +31,7 @@ class GoogleLoginServiceTest {
         when(google.exchangeLoginCode("https://backend.example.test/auth/callback", "code"))
                 .thenReturn(new GoogleProfile("person@example.test", "First", "Last", "google-refresh"));
         when(auth.ssoLogin("person@example.test", "First", "Last")).thenReturn(tokens);
+        when(mailAccounts.hasUsableConnection(userId)).thenReturn(true, false);
         var service = new GoogleLoginService(google, auth, properties, mailAccounts);
 
         String authorizationUrl = new GoogleOAuthService(properties).buildLoginUrl(
@@ -42,7 +43,15 @@ class GoogleLoginServiceTest {
         assertTrue(query.getFirst("prompt").contains("select_account"));
         assertFalse(query.getFirst("prompt").contains("consent"));
 
-        assertSame(tokens, service.completeLogin("code", "state"));
+        var connected = service.completeLogin("code", "state");
+        assertSame(tokens, connected.tokens());
+        assertFalse(connected.mailConnectionRequired());
         verify(mailAccounts).connectFromSso(userId, "person@example.test", "google-refresh");
+
+        when(google.exchangeLoginCode("https://backend.example.test/auth/callback", "code"))
+                .thenReturn(new GoogleProfile("person@example.test", "First", "Last", null));
+        var needsConnection = service.completeLogin("code", "state");
+        assertSame(tokens, needsConnection.tokens());
+        assertTrue(needsConnection.mailConnectionRequired());
     }
 }

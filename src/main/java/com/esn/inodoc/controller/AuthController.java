@@ -7,6 +7,7 @@ import com.esn.inodoc.dto.auth.RefreshRequest;
 import com.esn.inodoc.dto.auth.TokenResponse;
 import com.esn.inodoc.service.AuthService;
 import com.esn.inodoc.service.GoogleLoginService;
+import com.esn.inodoc.service.GoogleLoginService.LoginResult;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -71,10 +72,12 @@ public class AuthController {
             target = base + "?error=" + encode("Réponse Google incomplète");
         } else {
             try {
-                TokenResponse tokens = googleLoginService.completeLogin(code, state);
+                LoginResult login = googleLoginService.completeLogin(code, state);
+                TokenResponse tokens = login.tokens();
                 // Tokens are passed in the URL fragment (never sent to servers/logs).
                 target = base + "#accessToken=" + encode(tokens.accessToken())
-                        + "&refreshToken=" + encode(tokens.refreshToken());
+                    + "&refreshToken=" + encode(tokens.refreshToken())
+                    + "&connectGoogle=" + login.mailConnectionRequired();
             } catch (Exception e) {
                 String message = e.getMessage() != null ? e.getMessage() : "Échec de la connexion Google";
                 target = base + "?error=" + encode(message);

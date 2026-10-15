@@ -40,6 +40,18 @@ public class MailAccountService {
                 SecurityUtils.requirePrincipal().getUserId()).stream().map(this::toDto).toList();
     }
 
+    public boolean hasUsableConnection(UUID userId) {
+        MailAccount account = repository.findByCreatedByAndActiveTrue(userId).orElse(null);
+        if (account == null) return false;
+        try {
+            String refreshToken = cryptoService.decrypt(account.getRefreshTokenEncrypted());
+            String accessToken = googleOAuthService.refreshAccessToken(refreshToken);
+            return account.getEmail().equalsIgnoreCase(googleOAuthService.fetchEmail(accessToken));
+        } catch (RuntimeException exception) {
+            return false;
+        }
+    }
+
     /**
      * Starts the OAuth flow: returns the Google consent URL for
      * the current authenticated user.
