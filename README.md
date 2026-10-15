@@ -108,11 +108,11 @@ stocke chiffre cote serveur; si Google ne le fournit pas, l'utilisateur peut
 connecter son compte depuis la page Mon compte.
 
 Le parcours OAuth utilise un cookie de session : depart et callback doivent
-rester dans le meme navigateur. La configuration actuelle impose `SameSite=Lax`.
+rester dans le meme navigateur. Par defaut, `SESSION_COOKIE_SAME_SITE=lax`.
 Preferer front et back sur le meme site, par exemple deux sous-domaines d'un
-meme domaine sous HTTPS. Pour des sites distincts, une adaptation du cookie
-backend a `SameSite=None; Secure` est necessaire ; CORS seul ne suffit pas et
-le blocage des cookies tiers peut encore empecher le parcours.
+meme domaine sous HTTPS. Pour des sites distincts, configurer
+`SESSION_COOKIE_SAME_SITE=none` avec `SESSION_COOKIE_SECURE=true` ; CORS seul ne
+suffit pas et le blocage des cookies tiers peut encore empecher le parcours.
 En multi-instance, conserver l'affinite de session pendant OAuth.
 
 ## Precautions

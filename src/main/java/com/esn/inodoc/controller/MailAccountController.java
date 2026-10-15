@@ -84,7 +84,11 @@ public class MailAccountController {
                 target = base + "?mail=connected";
             } catch (BadRequestException | ConflictException | AccessDeniedException
                      | DataIntegrityViolationException e) {
-                target = base + "?mailError=" + encode("Échec de la connexion Google. Vérifiez le compte et réessayez.");
+                String message = e instanceof DataIntegrityViolationException
+                    ? "Impossible d'enregistrer la connexion Google. Réessayez."
+                    : e.getMessage();
+                target = base + "?mailError=" + encode(message == null
+                    ? "Échec de la connexion Google. Réessayez." : message);
             }
         }
         return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(target)).build();
