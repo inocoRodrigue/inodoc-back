@@ -16,6 +16,7 @@ public record DossierDto(
         Integer yearsOfExperience,
         String expertiseDomain,
         String summary,
+        String documentLanguage,
         List<SkillGroupDto> skillGroups,
         List<ExperienceCompanyDto> experiences,
         List<CertificationDto> certifications,

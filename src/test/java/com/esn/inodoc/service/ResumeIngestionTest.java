@@ -8,6 +8,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class ResumeIngestionTest {
     @Test
@@ -37,6 +44,25 @@ class ResumeIngestionTest {
             assertThrows(IntegrationUnavailableException.class, () -> service.parse("not json"));
         }
     }
+
+        @Test
+        void ingestionPromptRequiresDistinctTasksOnSeparateLines() {
+                try (var factory = Validation.buildDefaultValidatorFactory()) {
+                        var extractor = mock(ResumeTextExtractor.class);
+                        var ai = mock(AiModelClient.class);
+                        when(extractor.extract(any())).thenReturn("CV source text");
+                        when(ai.generateJson(anyString(), anyString(), anyInt())).thenReturn(
+                                        "{\"profile\":{},\"dossier\":{\"label\":\"CV\"}}");
+                        var service = new ResumeIngestionService(extractor, new ObjectMapper(), factory.getValidator(), ai);
+
+                        service.ingest(new MockMultipartFile("file", "resume.pdf", "application/pdf", new byte[]{1}));
+
+                        var prompt = org.mockito.ArgumentCaptor.forClass(String.class);
+                        verify(ai).generateJson(prompt.capture(), eq("CV source text"), eq(150000));
+                            assertTrue(prompt.getValue().contains("tasks MUST be a JSON array of strings"));
+                            assertTrue(prompt.getValue().contains("one distinct task or responsibility per array element"));
+                }
+        }
 
         @Test
         void parserReturnsSupportedSuggestionsAndRejectsUnknownFields() {
@@ -70,7 +96,7 @@ class ResumeIngestionTest {
                                                                                 {"profile":{"firstName":"Camille","email":"not-an-email","phone":123},
                                                                                  "dossier":{"headline":"Java developer","yearsOfExperience":2.5,
                                                                                          "experiences":[{"company":"Company","startDate":"bad-date",
-                                                                                                 "projects":[{"name":"Project","tasks":"Development"},42]},42],
+                                                                                                 "projects":[{"name":"Project","tasks":["Designed APIs","Reviewed code","Deployed services"]},42]},42],
                                                                                          "educations":[{"school":"School","year":"2025"},{"school":null}],
                                                                                          "languages":"wrong type"},
                                                                                  "suggestions":[
@@ -87,7 +113,8 @@ class ResumeIngestionTest {
                                                 assertEquals(1, result.dossier().experiences().size());
                                                 assertNull(result.dossier().experiences().get(0).startDate());
                                                 assertEquals(1, result.dossier().experiences().get(0).projects().size());
-                                                assertEquals("Development", result.dossier().experiences().get(0).projects().get(0).tasks());
+                                                assertEquals("Designed APIs\nReviewed code\nDeployed services",
+                                                        result.dossier().experiences().get(0).projects().get(0).tasks());
                                                 assertEquals(1, result.dossier().educations().size());
                                                 assertTrue(result.dossier().languages().isEmpty());
                                                 assertEquals(1, result.suggestions().size());
@@ -125,6 +152,21 @@ class ResumeIngestionTest {
                         assertNull(result.dossier().yearsOfExperience());
                         assertTrue(result.incomplete());
                         assertTrue(factory.getValidator().validate(result).isEmpty());
+                }
+        }
+
+        @Test
+        void normalizesLegacyBulletTaskTextIntoOneTaskPerLine() {
+                try (var factory = Validation.buildDefaultValidatorFactory()) {
+                        var service = new ResumeIngestionService(new ResumeTextExtractor(),
+                                new ObjectMapper().findAndRegisterModules(), factory.getValidator(), "", "", "");
+                        var result = service.parse("""
+                                {"profile":{},"dossier":{"label":"CV","experiences":[{"company":"Company",
+                                  "projects":[{"name":"Project","tasks":"• Design APIs • Review code • Deploy services"}]}]}}
+                                """);
+
+                        assertEquals("Design APIs\\nReview code\\nDeploy services",
+                                result.dossier().experiences().get(0).projects().get(0).tasks());
                 }
         }
 

@@ -39,6 +39,7 @@ public final class DossierMapper {
                 d.getYearsOfExperience(),
                 d.getExpertiseDomain(),
                 d.getSummary(),
+                d.getDocumentLanguage(),
                 d.getSkillGroups().stream().map(DossierMapper::toDto).toList(),
                 d.getExperiences().stream().map(DossierMapper::toDto).toList(),
                 d.getCertifications().stream().map(item -> toDto(item, imageUrlResolver)).toList(),
@@ -73,6 +74,9 @@ public final class DossierMapper {
         d.setYearsOfExperience(r.yearsOfExperience());
         d.setExpertiseDomain(r.expertiseDomain());
         d.setSummary(r.summary());
+        if (r.documentLanguage() != null && !r.documentLanguage().isBlank()) {
+            d.setDocumentLanguage(r.documentLanguage().trim());
+        }
 
         d.getSkillGroups().clear();
         AtomicInteger sgPos = new AtomicInteger();

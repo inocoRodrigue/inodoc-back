@@ -46,6 +46,9 @@ public class CompetenceDossier extends BaseEntity {
     @Column(columnDefinition = "text")
     private String summary;
 
+    @Column(name = "document_language", nullable = false, length = 80)
+    private String documentLanguage = "fr";
+
     @OneToMany(mappedBy = "dossier", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("position ASC")
     private List<SkillGroup> skillGroups = new ArrayList<>();
@@ -163,6 +166,14 @@ public class CompetenceDossier extends BaseEntity {
 
     public void setSummary(String summary) {
         this.summary = summary;
+    }
+
+    public String getDocumentLanguage() {
+        return documentLanguage;
+    }
+
+    public void setDocumentLanguage(String documentLanguage) {
+        this.documentLanguage = documentLanguage;
     }
 
     public List<SkillGroup> getSkillGroups() {

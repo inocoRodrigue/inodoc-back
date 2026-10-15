@@ -1,6 +1,7 @@
 package com.esn.inodoc.service;
 
 import com.esn.inodoc.controller.error.IntegrationUnavailableException;
+import com.esn.inodoc.dto.dossier.ExperienceProjectDto;
 import com.esn.inodoc.dto.dossier.DossierUpsertRequest;
 import com.esn.inodoc.dto.profile.ResumeExtraction;
 import com.esn.inodoc.dto.profile.ResumeSuggestion;
@@ -41,7 +42,12 @@ public class ResumeIngestionService {
             yearsOfExperience (integer 0-99 or null), expertiseDomain (string), summary (max 5000 chars),
             skillGroups: [{category: string, content: string}],
             experiences: [{company: string, startDate: YYYY-MM-DD or null, endDate: YYYY-MM-DD or null,
-              roleTitle: string, context: string, projects: [{name, context, team, methodology, tasks, technologies}]}],
+                            roleTitle: string, context: string, projects: [{name, context, team, methodology,
+                                tasks: ["one distinct task", "another distinct task"], technologies}]}],
+                        tasks MUST be a JSON array of strings, with one distinct task or responsibility per array element.
+                        Preserve every task from the CV in its original order. Never merge separate tasks into one
+                        sentence, paragraph, comma-separated string or semicolon-separated string. Do not invent tasks.
+                        Return an empty array when no task is available. The server will display each array element on its own line.
             educations: [{school: string, degree: string, year: string}],
             certifications: [{name: string, issuer: string, year: string}],
             languages: [{language: string, level: string}],
@@ -152,6 +158,9 @@ public class ResumeIngestionService {
             knownFields.add(name);
             JavaType type = mapper.constructType(component.getGenericType());
             JsonNode value = source.get(name);
+            if (recordType == ExperienceProjectDto.class && name.equals("tasks") && value != null && !value.isNull()) {
+                value = normalizeTasks(value, path + ".tasks", warnings);
+            }
             if (name.equals("id") || name.equals("imageUrl")) {
                 if (value != null && !value.isNull()) warn(warnings, path + "." + name);
                 continue;
@@ -180,6 +189,39 @@ public class ResumeIngestionService {
             return null;
         }
         return result;
+    }
+
+    private JsonNode normalizeTasks(JsonNode value, String path, Set<String> warnings) {
+        List<String> lines = new ArrayList<>();
+        if (value.isArray()) {
+            if (value.size() > 100) warn(warnings, path);
+            for (int index = 0; index < Math.min(value.size(), 100); index++) {
+                JsonNode task = value.get(index);
+                if (!task.isTextual()) {
+                    warn(warnings, path + "[" + index + "]");
+                    continue;
+                }
+                addTaskLines(task.asText(), lines);
+            }
+        } else if (value.isTextual()) {
+            String text = value.asText();
+            if (!text.contains("\n") && text.matches("(?s).*\\s[•▪◦●].*")) {
+                for (String task : text.split("\\s*[•▪◦●]\\s*")) addTaskLines(task, lines);
+            } else {
+                addTaskLines(text, lines);
+            }
+        } else {
+            warn(warnings, path);
+            return value;
+        }
+        return mapper.getNodeFactory().textNode(String.join("\n", lines));
+    }
+
+    private void addTaskLines(String value, List<String> lines) {
+        for (String line : value.split("\\R")) {
+            String task = line.trim().replaceFirst("^(?:[•▪◦●*-]|\\d+[.)])\\s*", "").trim();
+            if (!task.isEmpty()) lines.add(task);
+        }
     }
 
     private JsonNode sanitizeValue(JsonNode value, JavaType type, Class<?> recordType, String name,

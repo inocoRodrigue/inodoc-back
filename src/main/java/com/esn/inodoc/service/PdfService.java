@@ -116,8 +116,9 @@ public class PdfService {
             document.open();
 
             // Hero: experience first, followed by the dossier headline.
+            boolean english = isEnglish(dossier.getDocumentLanguage());
             if (dossier.getYearsOfExperience() != null) {
-                Paragraph years = new Paragraph(dossier.getYearsOfExperience() + " ANS EXP", YEARS);
+                Paragraph years = new Paragraph(dossier.getYearsOfExperience() + (english ? " YRS EXP" : " ANS EXP"), YEARS);
                 years.setSpacingAfter(8);
                 document.add(years);
             }
@@ -132,16 +133,16 @@ public class PdfService {
 
             // Summary
             if (hasText(dossier.getSummary())) {
-                section(document, "Résumé");
+                section(document, localized(dossier, "Résumé", "Summary"));
                 document.add(new Paragraph(dossier.getSummary(), NORMAL));
                 document.add(spacer());
             }
 
             // Education & certifications
             if (!dossier.getEducations().isEmpty() || !dossier.getCertifications().isEmpty()) {
-                section(document, "Formations et certifications");
+                section(document, localized(dossier, "Formations et certifications", "Education and certifications"));
                 if (!dossier.getEducations().isEmpty()) {
-                    addCredentialHeading(document, "Diplôme :");
+                    addCredentialHeading(document, localized(dossier, "Diplôme :", "Degree:"));
                 }
                 for (Education edu : dossier.getEducations()) {
                     Paragraph p = new Paragraph();
@@ -157,13 +158,13 @@ public class PdfService {
                     p.setSpacingAfter(6);
                     document.add(p);
                     if (hasText(edu.getLink())) {
-                        document.add(new Paragraph("Lien : " + edu.getLink(), SMALL));
+                        document.add(new Paragraph(localized(dossier, "Lien : ", "Link: ") + edu.getLink(), SMALL));
                     }
                     Image image = dossierImage(edu.getImageUrl());
                     if (image != null) document.add(image);
                 }
                 if (!dossier.getCertifications().isEmpty()) {
-                    addCredentialHeading(document, "Formations et certifications :");
+                    addCredentialHeading(document, localized(dossier, "Formations et certifications :", "Certifications:"));
                 }
                 for (Certification cert : dossier.getCertifications()) {
                     Paragraph p = new Paragraph();
@@ -178,7 +179,7 @@ public class PdfService {
                     }
                     document.add(p);
                     if (hasText(cert.getLink())) {
-                        document.add(new Paragraph("Lien : " + cert.getLink(), SMALL));
+                        document.add(new Paragraph(localized(dossier, "Lien : ", "Link: ") + cert.getLink(), SMALL));
                     }
                     Image image = dossierImage(cert.getImageUrl());
                     if (image != null) document.add(image);
@@ -188,7 +189,7 @@ public class PdfService {
 
             // Skills
             if (!dossier.getSkillGroups().isEmpty()) {
-                section(document, "Compétences");
+                section(document, localized(dossier, "Compétences", "Skills"));
                 PdfPTable skills = new PdfPTable(new float[]{1.2f, 3f});
                 skills.setWidthPercentage(120);
                 skills.setHorizontalAlignment(Element.ALIGN_CENTER);
@@ -209,7 +210,7 @@ public class PdfService {
 
             // Languages
             if (!dossier.getLanguages().isEmpty()) {
-                section(document, "Langues");
+                section(document, localized(dossier, "Langues", "Languages"));
                 PdfPTable languages = new PdfPTable(new float[]{1f, 3f});
                 languages.setWidthPercentage(100);
                 for (LanguageSkill language : dossier.getLanguages()) {
@@ -227,12 +228,12 @@ public class PdfService {
 
             // Technical tests
             if (!dossier.getTestResults().isEmpty()) {
-                section(document, "Tests techniques");
+                section(document, localized(dossier, "Tests techniques", "Technical tests"));
                 for (TestResult test : dossier.getTestResults()) {
                     Paragraph head = new Paragraph();
                     head.add(new Phrase(safe(test.getName()), BOLD));
                     if (hasText(test.getScore())) {
-                        head.add(new Phrase("   Score : " + test.getScore(), SMALL));
+                        head.add(new Phrase(localized(dossier, "   Score : ", "   Score: ") + test.getScore(), SMALL));
                     }
                     PdfPCell cell = cardCell();
                     cell.addElement(head);
@@ -240,7 +241,7 @@ public class PdfService {
                         cell.addElement(new Paragraph(test.getDescription(), NORMAL));
                     }
                     if (hasText(test.getLink())) {
-                        cell.addElement(new Paragraph("Lien : " + test.getLink(), SMALL));
+                        cell.addElement(new Paragraph(localized(dossier, "Lien : ", "Link: ") + test.getLink(), SMALL));
                     }
                     Image image = dossierImage(test.getImageUrl());
                     if (image != null) cell.addElement(image);
@@ -250,7 +251,7 @@ public class PdfService {
             }
 
             if (!dossier.getReferences().isEmpty()) {
-                section(document, "Références");
+                section(document, localized(dossier, "Références", "References"));
                 for (DossierReference ref : dossier.getReferences()) {
                     Paragraph name = new Paragraph();
                     name.add(new Phrase(safe(ref.getName()), BOLD));
@@ -261,14 +262,14 @@ public class PdfService {
                     PdfPCell cell = cardCell();
                     cell.addElement(name);
                     if (hasText(ref.getDescription())) cell.addElement(new Paragraph(ref.getDescription(), NORMAL));
-                    if (hasText(ref.getLink())) cell.addElement(new Paragraph("Lien : " + ref.getLink(), SMALL));
+                    if (hasText(ref.getLink())) cell.addElement(new Paragraph(localized(dossier, "Lien : ", "Link: ") + ref.getLink(), SMALL));
                     document.add(cardTable(cell));
                 }
             }
 
             // Professional experiences
             if (!dossier.getExperiences().isEmpty()) {
-                Paragraph experienceTitle = new Paragraph("EXPÉRIENCES", EXPERIENCE_SECTION);
+                Paragraph experienceTitle = new Paragraph(localized(dossier, "EXPÉRIENCES", "EXPERIENCE"), EXPERIENCE_SECTION);
                 experienceTitle.setSpacingBefore(6);
                 experienceTitle.setSpacingAfter(0);
                 document.add(experienceTitle);
@@ -276,25 +277,25 @@ public class PdfService {
                 List<ExperienceCompany> experiences = dossier.getExperiences();
                 for (int experienceIndex = 0; experienceIndex < experiences.size(); experienceIndex++) {
                     ExperienceCompany exp = experiences.get(experienceIndex);
-                    document.add(experienceHeader(exp));
+                    document.add(experienceHeader(exp, english));
                     if (hasText(exp.getRoleTitle())) {
-                        fieldTag(document, "Rôle");
+                        fieldTag(document, localized(dossier, "Rôle", "Role"));
                         document.add(new Paragraph(exp.getRoleTitle(), BOLD));
                     }
                     if (hasText(exp.getContext())) {
-                        fieldTag(document, "Projet");
+                        fieldTag(document, localized(dossier, "Projet", "Project"));
                         document.add(new Paragraph(exp.getContext(), NORMAL));
                     }
                     for (ExperienceProject project : exp.getProjects()) {
-                        fieldTag(document, "Projet");
+                        fieldTag(document, localized(dossier, "Projet", "Project"));
                         if (hasText(project.getName())) {
                             document.add(new Paragraph(project.getName(), BOLD));
                         }
-                        addLabelled(document, "Contexte", project.getContext());
-                        addLabelled(document, "Équipe", project.getTeam());
-                        addLabelled(document, "Méthodologie", project.getMethodology());
+                        addLabelled(document, localized(dossier, "Contexte", "Context"), project.getContext());
+                        addLabelled(document, localized(dossier, "Équipe", "Team"), project.getTeam());
+                        addLabelled(document, localized(dossier, "Méthodologie", "Methodology"), project.getMethodology());
                         if (hasText(project.getTasks())) {
-                            fieldTag(document, "Tâches");
+                            fieldTag(document, localized(dossier, "Tâches", "Tasks"));
                             com.lowagie.text.List tasks = new com.lowagie.text.List(false);
                             tasks.setIndentationLeft(18);
                             tasks.setListSymbol(new com.lowagie.text.Chunk("\u2022 ", NORMAL));
@@ -306,7 +307,7 @@ public class PdfService {
                             document.add(tasks);
                         }
                         if (hasText(project.getTechnologies())) {
-                            fieldTag(document, "Environnement");
+                            fieldTag(document, localized(dossier, "Environnement", "Environment"));
                             document.add(new Paragraph(project.getTechnologies(), NORMAL));
                         }
                     }
@@ -340,15 +341,16 @@ public class PdfService {
         document.add(heading);
     }
 
-    private PdfPTable experienceHeader(ExperienceCompany experience) {
+    private PdfPTable experienceHeader(ExperienceCompany experience, boolean english) {
         PdfPTable header = new PdfPTable(new float[]{1f, 1f, 1f});
         header.setWidthPercentage(100);
         header.setSpacingBefore(2);
         header.setSpacingAfter(14);
         header.addCell(experienceCell(safe(experience.getCompany()), "pin", COMPANY));
         header.addCell(experienceCell(ExperiencePeriodFormatter.formatDuration(
-                experience.getStartDate(), experience.getEndDate()), "timer"));
-        header.addCell(experienceCell(formatPeriod(experience.getStartDate(), experience.getEndDate()), "calendar"));
+            experience.getStartDate(), experience.getEndDate(), english), "timer"));
+        header.addCell(experienceCell(ExperiencePeriodFormatter.formatPeriod(
+            experience.getStartDate(), experience.getEndDate(), english), "calendar"));
         return header;
     }
 
@@ -720,6 +722,16 @@ public class PdfService {
 
     private String formatPeriod(LocalDate start, LocalDate end) {
         return ExperiencePeriodFormatter.formatPeriod(start, end);
+    }
+
+    private String localized(CompetenceDossier dossier, String french, String english) {
+        return isEnglish(dossier.getDocumentLanguage()) ? english : french;
+    }
+
+    private boolean isEnglish(String language) {
+        return language != null && (language.equalsIgnoreCase("en")
+                || language.toLowerCase(Locale.ROOT).startsWith("english")
+                || language.toLowerCase(Locale.ROOT).startsWith("en-"));
     }
 
     private boolean hasText(String value) {

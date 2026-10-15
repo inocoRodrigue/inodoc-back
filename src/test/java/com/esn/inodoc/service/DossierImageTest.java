@@ -45,6 +45,10 @@ class DossierImageTest {
                 java.time.LocalDate.of(2026, 9, 1), java.time.LocalDate.of(2026, 10, 31)));
         assertEquals("3 ans", ExperiencePeriodFormatter.formatDuration(
                 java.time.LocalDate.of(2023, 9, 1), java.time.LocalDate.of(2026, 9, 1)));
+        assertEquals("2 months", ExperiencePeriodFormatter.formatDuration(
+            java.time.LocalDate.of(2026, 9, 1), java.time.LocalDate.of(2026, 10, 31), true));
+        assertEquals("3 years", ExperiencePeriodFormatter.formatDuration(
+            java.time.LocalDate.of(2023, 9, 1), java.time.LocalDate.of(2026, 9, 1), true));
         var dossier = dossier("https://external.example.test/");
         var experience = new ExperienceCompany();
         experience.setCompany("Datelia");
@@ -54,6 +58,44 @@ class DossierImageTest {
         var dtoExperience = DossierMapper.toDto(dossier).experiences().get(0);
         assertEquals("2 mois", dtoExperience.duration());
         assertEquals("09/2026 - 10/2026", dtoExperience.period());
+    }
+
+    @Test
+    void translatedDossierPdfUsesEnglishSectionAndExperienceLabels() throws Exception {
+        var source = dossier("https://external.example.test/");
+        source.setDocumentLanguage("English");
+        source.setSummary("Professional summary");
+        var experience = new ExperienceCompany();
+        experience.setCompany("Example Company");
+        experience.setStartDate(java.time.LocalDate.of(2023, 1, 1));
+        experience.setRoleTitle("Software developer");
+        experience.setContext("Product development");
+        var project = new ExperienceProject();
+        project.setName("Platform");
+        project.setContext("Cloud migration");
+        experience.addProject(project);
+        source.addExperience(experience);
+
+        var company = mock(CompanySettingsService.class);
+        when(company.get()).thenReturn(new CompanyContactDto(null, null, null, null, null, 12));
+        var storage = new S3ImageStorage("test-bucket", "", "cellar.example.test", "test-key", "test-secret");
+        var reader = new PdfReader(new PdfService(company, storage).generateDossierPdf(source));
+        try {
+            var extractor = new com.lowagie.text.pdf.parser.PdfTextExtractor(reader);
+            String text = extractor.getTextFromPage(1).toUpperCase(java.util.Locale.ROOT);
+            assertTrue(text.contains("SUMMARY"));
+            assertTrue(text.contains("EDUCATION AND CERTIFICATIONS"));
+            assertTrue(text.contains("EXPERIENCE"));
+            assertTrue(text.contains("ROLE"));
+            assertTrue(text.contains("PROJECT"));
+            assertTrue(text.contains("CONTEXT"));
+            assertTrue(text.contains("3 YEARS"));
+            assertFalse(text.contains("RÉSUMÉ"));
+            assertFalse(text.contains("EXPÉRIENCES"));
+            assertFalse(text.contains("RÔLE"));
+        } finally {
+            reader.close();
+        }
     }
 
     @Test

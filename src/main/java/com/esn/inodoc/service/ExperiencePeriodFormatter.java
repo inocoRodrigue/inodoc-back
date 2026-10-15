@@ -13,6 +13,10 @@ public final class ExperiencePeriodFormatter {
     }
 
     public static String formatDuration(LocalDate start, LocalDate end) {
+        return formatDuration(start, end, false);
+    }
+
+    public static String formatDuration(LocalDate start, LocalDate end, boolean english) {
         if (start == null) {
             return "";
         }
@@ -32,25 +36,31 @@ public final class ExperiencePeriodFormatter {
         int months = totalMonths % 12;
         StringBuilder duration = new StringBuilder();
         if (years > 0) {
-            duration.append(years).append(years == 1 ? " an" : " ans");
+            duration.append(years).append(english ? (years == 1 ? " year" : " years")
+                    : (years == 1 ? " an" : " ans"));
         }
         if (months > 0) {
             if (!duration.isEmpty()) {
                 duration.append(' ');
             }
-            duration.append(months).append(" mois");
+            duration.append(months).append(english ? (months == 1 ? " month" : " months") : " mois");
         }
         return duration.toString();
     }
 
     public static String formatPeriod(LocalDate start, LocalDate end) {
+        return formatPeriod(start, end, false);
+    }
+
+    public static String formatPeriod(LocalDate start, LocalDate end, boolean english) {
         if (start == null && end == null) {
             return "";
         }
         if (start == null) {
-            return "Jusqu'à " + MONTH_YEAR.format(end);
+            return (english ? "Until " : "Jusqu'à ") + MONTH_YEAR.format(end);
         }
         String startLabel = MONTH_YEAR.format(start);
-        return end == null ? "Depuis " + startLabel : startLabel + " - " + MONTH_YEAR.format(end);
+        return end == null ? (english ? "Since " : "Depuis ") + startLabel
+            : startLabel + " - " + MONTH_YEAR.format(end);
     }
 }

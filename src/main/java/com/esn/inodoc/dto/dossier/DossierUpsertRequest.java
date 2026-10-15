@@ -46,5 +46,17 @@ public record DossierUpsertRequest(
 
         List<ReferenceDto> references,
 
-        List<TestResultDto> testResults) {
+        List<TestResultDto> testResults,
+
+        @Size(max = 80, message = "Document language cannot exceed 80 characters")
+        String documentLanguage) {
+
+    public DossierUpsertRequest(String label, Boolean master, String headline, Integer yearsOfExperience,
+                                String expertiseDomain, String summary, List<SkillGroupDto> skillGroups,
+                                List<ExperienceCompanyDto> experiences, List<CertificationDto> certifications,
+                                List<EducationDto> educations, List<LanguageDto> languages,
+                                List<ReferenceDto> references, List<TestResultDto> testResults) {
+        this(label, master, headline, yearsOfExperience, expertiseDomain, summary, skillGroups, experiences,
+                certifications, educations, languages, references, testResults, "fr");
+    }
 }
