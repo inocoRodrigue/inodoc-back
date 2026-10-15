@@ -15,9 +15,6 @@ import java.util.UUID;
 @Service
 public class GoogleLoginService {
 
-    public record LoginResult(TokenResponse tokens, boolean mailConnectionRequired) {
-    }
-
     private final GoogleOAuthService googleOAuthService;
     private final AuthService authService;
     private final AppProperties appProperties;
@@ -41,13 +38,13 @@ public class GoogleLoginService {
 
     /** Verifies the callback, retrieves the Google profile and issues tokens. */
     @Transactional
-    public LoginResult completeLogin(String code, String state) {
+    public TokenResponse completeLogin(String code, String state) {
         // Verifies signature and expiry (CSRF protection); the user id is a nonce.
         googleOAuthService.verifyState(state);
         GoogleProfile profile = googleOAuthService.exchangeLoginCode(redirectUri(), code);
         TokenResponse tokens = authService.ssoLogin(profile.email(), profile.firstName(), profile.lastName());
         mailAccountService.connectFromSso(tokens.user().id(), profile.email(), profile.refreshToken());
-        return new LoginResult(tokens, !mailAccountService.hasUsableConnection(tokens.user().id()));
+        return tokens;
     }
 
     private String redirectUri() {

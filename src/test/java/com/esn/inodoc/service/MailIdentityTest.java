@@ -92,37 +92,6 @@ class MailIdentityTest {
     }
 
     @Test
-    void ssoRecognizesAUsableExistingGmailConnection() {
-        var account = new MailAccount();
-        account.setCreatedBy(user.getId());
-        account.setEmail("sender@example.test");
-        account.setRefreshTokenEncrypted("encrypted");
-        when(accounts.findByCreatedByAndActiveTrue(user.getId())).thenReturn(Optional.of(account));
-        when(crypto.decrypt("encrypted")).thenReturn("refresh");
-        when(google.refreshAccessToken("refresh")).thenReturn("access");
-        when(google.fetchEmail("access")).thenReturn("sender@example.test");
-
-        assertTrue(service.hasUsableConnection(user.getId()));
-    }
-
-    @Test
-    void ssoRequestsReconnectWhenGmailRefreshTokenIsRevokedOrMissing() {
-        assertFalse(service.hasUsableConnection(user.getId()));
-
-        var account = new MailAccount();
-        account.setCreatedBy(user.getId());
-        account.setEmail("sender@example.test");
-        account.setRefreshTokenEncrypted("encrypted");
-        when(accounts.findByCreatedByAndActiveTrue(user.getId())).thenReturn(Optional.of(account));
-        when(crypto.decrypt("encrypted")).thenReturn("revoked-refresh");
-        when(google.refreshAccessToken("revoked-refresh"))
-                .thenThrow(new com.esn.inodoc.controller.error.BadRequestException("invalid_grant"));
-
-        assertFalse(service.hasUsableConnection(user.getId()));
-        verify(google, never()).fetchEmail(anyString());
-    }
-
-    @Test
     void ssoStoresTheGmailRefreshTokenEncryptedForItsUser() {
         when(accounts.findByCreatedByAndActiveTrue(user.getId())).thenReturn(Optional.empty());
         when(accounts.findByEmailIgnoreCase("owner@example.test")).thenReturn(Optional.empty());
