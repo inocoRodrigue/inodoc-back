@@ -262,7 +262,7 @@ public class AppProperties {
             /** Redirect URI registered in Google Cloud (backend callback). */
             private String redirectUri = "http://localhost:8080/api/mail-accounts/oauth/callback";
             /** Frontend URL to redirect to after the OAuth callback. */
-            private String successRedirect = "http://localhost:4200/settings";
+            private String successRedirect = "http://localhost:4200/account";
 
             public String getClientId() {
                 return clientId;

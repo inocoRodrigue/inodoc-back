@@ -24,6 +24,7 @@ class MailOAuthSessionTest {
 
         var accepted = controller.callback("code", "signed-state", null, session);
         assertTrue(accepted.getHeaders().getLocation().toString().contains("mail=connected"));
+        assertTrue(accepted.getHeaders().getLocation().toString().startsWith("http://localhost:4200/account"));
         verify(service).completeAuthorization("code", "signed-state");
 
         controller.callback("code", "signed-state", null, session);

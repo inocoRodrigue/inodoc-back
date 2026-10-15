@@ -98,10 +98,14 @@ redirection autorisees dans le client OAuth de Google Cloud :
 | `GOOGLE_LOGIN_REDIRECT_URI` | `https://back.example.com/api/auth/google/callback` |
 | `GOOGLE_REDIRECT_URI` | `https://back.example.com/api/mail-accounts/oauth/callback` |
 | `GOOGLE_LOGIN_SUCCESS_REDIRECT` | `https://front.example.com/auth/callback` |
-| `GOOGLE_SUCCESS_REDIRECT` | `https://front.example.com/settings` |
+| `GOOGLE_SUCCESS_REDIRECT` | `https://front.example.com/account` |
 
 Activer l'API Gmail pour l'envoi de mail et configurer l'ecran de consentement
 OAuth, y compris les utilisateurs de test si l'application Google est en test.
+Le SSO demande aussi l'autorisation `gmail.send` hors ligne afin de connecter
+automatiquement le compte Gmail personnel. Le jeton de renouvellement est
+stocke chiffre cote serveur; si Google ne le fournit pas, l'utilisateur peut
+connecter son compte depuis la page Mon compte.
 
 Le parcours OAuth utilise un cookie de session : depart et callback doivent
 rester dans le meme navigateur. La configuration actuelle impose `SameSite=Lax`.

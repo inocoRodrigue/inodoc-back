@@ -18,13 +18,16 @@ public class GoogleLoginService {
     private final GoogleOAuthService googleOAuthService;
     private final AuthService authService;
     private final AppProperties appProperties;
+    private final MailAccountService mailAccountService;
 
     public GoogleLoginService(GoogleOAuthService googleOAuthService,
                               AuthService authService,
-                              AppProperties appProperties) {
+                              AppProperties appProperties,
+                              MailAccountService mailAccountService) {
         this.googleOAuthService = googleOAuthService;
         this.authService = authService;
         this.appProperties = appProperties;
+        this.mailAccountService = mailAccountService;
     }
 
     /** Builds the Google consent URL for a new login (no user yet). */
@@ -39,7 +42,9 @@ public class GoogleLoginService {
         // Verifies signature and expiry (CSRF protection); the user id is a nonce.
         googleOAuthService.verifyState(state);
         GoogleProfile profile = googleOAuthService.exchangeLoginCode(redirectUri(), code);
-        return authService.ssoLogin(profile.email(), profile.firstName(), profile.lastName());
+        TokenResponse tokens = authService.ssoLogin(profile.email(), profile.firstName(), profile.lastName());
+        mailAccountService.connectFromSso(tokens.user().id(), profile.email(), profile.refreshToken());
+        return tokens;
     }
 
     private String redirectUri() {

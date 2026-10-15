@@ -61,7 +61,7 @@ public class PdfService {
     private static final Font FIELD_TAG = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, BRAND_INK);
     private static final Font COMPANY = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, BRAND_INK);
     private static final Font BOLD = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11.5f, BRAND_INK);
-    private static final Font EXPERTISE = FontFactory.getFont("Helvetica-Oblique", 11.5f, BRAND_INK);
+    private static final Font EXPERTISE = FontFactory.getFont("Helvetica-Oblique", 10.5f, BRAND_INK);
     private static final Font CONTACT_LINK = FontFactory.getFont(FontFactory.HELVETICA, 9,
             Font.UNDERLINE, new Color(0, 102, 204));
     private static final Font NORMAL = FontFactory.getFont(FontFactory.HELVETICA, 11.5f, INK_SOFT);
@@ -122,6 +122,7 @@ public class PdfService {
                 document.add(years);
             }
             Paragraph headline = new Paragraph();
+            headline.setLeading(H1.getSize() * 1.5f);
             headline.add(new Phrase(hasText(dossier.getHeadline()) ? dossier.getHeadline() : initials(profile), H1));
             if (hasText(dossier.getExpertiseDomain())) {
                 headline.add(new Phrase("  " + dossier.getExpertiseDomain().toUpperCase(Locale.FRENCH), EXPERTISE));
@@ -579,8 +580,8 @@ public class PdfService {
         String label = title.toUpperCase(Locale.FRENCH);
         PdfPTable heading = new PdfPTable(1);
         heading.setHorizontalAlignment(Element.ALIGN_LEFT);
-        heading.setSpacingBefore(6);
-        heading.setSpacingAfter(2);
+        heading.setSpacingBefore(10);
+        heading.setSpacingAfter(6);
         Image referenceLabel = referenceLabel(title);
         if (referenceLabel != null) {
             heading.setTotalWidth(referenceLabel.getScaledWidth());

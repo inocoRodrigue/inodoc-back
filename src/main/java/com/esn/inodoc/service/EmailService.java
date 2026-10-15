@@ -20,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 
 /**
  * Sending emails via the Gmail API on behalf of a Google account connected in OAuth2.
@@ -65,7 +66,13 @@ public class EmailService {
      */
     public void send(MailAccount account, String to, String subject, String body,
                      byte[] attachment, String attachmentName) {
-        var userId = SecurityUtils.requirePrincipal().getUserId();
+        sendAsUser(SecurityUtils.requirePrincipal().getUserId(), account, to, subject, body,
+                attachment, attachmentName);
+    }
+
+    /** Sends through an explicitly owned Gmail account, for scheduled notifications. */
+    public void sendAsUser(UUID userId, MailAccount account, String to, String subject, String body,
+                           byte[] attachment, String attachmentName) {
         if (!account.isActive() || !userId.equals(account.getCreatedBy())) {
             throw new AccessDeniedException("Compte Google non autorisé");
         }

@@ -92,6 +92,35 @@ class MailIdentityTest {
     }
 
     @Test
+    void ssoStoresTheGmailRefreshTokenEncryptedForItsUser() {
+        when(accounts.findByCreatedByAndActiveTrue(user.getId())).thenReturn(Optional.empty());
+        when(accounts.findByEmailIgnoreCase("owner@example.test")).thenReturn(Optional.empty());
+        when(crypto.encrypt("google-refresh")).thenReturn("encrypted-refresh");
+
+        service.connectFromSso(user.getId(), "Owner@Example.Test", "google-refresh");
+
+        var captor = org.mockito.ArgumentCaptor.forClass(MailAccount.class);
+        verify(accounts).save(captor.capture());
+        assertEquals("owner@example.test", captor.getValue().getEmail());
+        assertEquals(user.getId(), captor.getValue().getCreatedBy());
+        assertEquals("encrypted-refresh", captor.getValue().getRefreshTokenEncrypted());
+        assertTrue(captor.getValue().isActive());
+    }
+
+    @Test
+    void ssoDoesNotReplaceAnExistingDifferentMailConnection() {
+        var existing = new MailAccount();
+        existing.setEmail("another@example.test");
+        existing.setCreatedBy(user.getId());
+        when(accounts.findByCreatedByAndActiveTrue(user.getId())).thenReturn(Optional.of(existing));
+
+        service.connectFromSso(user.getId(), "owner@example.test", "google-refresh");
+
+        verify(accounts, never()).save(any());
+        verifyNoInteractions(crypto);
+    }
+
+    @Test
     void sendsSavedSignatureAndVerifiedFromThroughMockGmail() throws Exception {
         var role = new com.esn.inodoc.domain.Role();
         role.setName(com.esn.inodoc.domain.RoleName.BUSINESS_MANAGER);

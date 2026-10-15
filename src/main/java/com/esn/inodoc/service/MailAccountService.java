@@ -85,6 +85,37 @@ public class MailAccountService {
         repository.save(account);
     }
 
+    /** Stores the Gmail grant returned as part of the initial SSO consent. */
+    @Transactional
+    public void connectFromSso(UUID userId, String email, String refreshToken) {
+        if (email == null || email.isBlank() || refreshToken == null || refreshToken.isBlank()) {
+            return;
+        }
+
+        MailAccount active = repository.findByCreatedByAndActiveTrue(userId).orElse(null);
+        if (active != null) {
+            if (active.getEmail().equalsIgnoreCase(email)) {
+                active.setRefreshTokenEncrypted(cryptoService.encrypt(refreshToken));
+                repository.save(active);
+            }
+            return;
+        }
+
+        String normalizedEmail = email.trim().toLowerCase(java.util.Locale.ROOT);
+        MailAccount account = repository.findByEmailIgnoreCase(normalizedEmail).orElseGet(MailAccount::new);
+        if (account.getCreatedBy() != null && !userId.equals(account.getCreatedBy())) {
+            return;
+        }
+        account.setEmail(normalizedEmail);
+        if (account.getDisplayName() == null) {
+            account.setDisplayName(normalizedEmail);
+        }
+        account.setRefreshTokenEncrypted(cryptoService.encrypt(refreshToken));
+        account.setActive(true);
+        account.setCreatedBy(userId);
+        repository.save(account);
+    }
+
     @Transactional
     public void delete(UUID id) {
         MailAccount account = repository.findById(id)

@@ -38,7 +38,8 @@ public class GoogleOAuthService {
     private static final String USERINFO_ENDPOINT = "https://www.googleapis.com/oauth2/v3/userinfo";
     private static final String SCOPES =
             "openid email https://www.googleapis.com/auth/gmail.send";
-    private static final String LOGIN_SCOPES = "openid email profile";
+    private static final String LOGIN_SCOPES =
+            "openid email profile https://www.googleapis.com/auth/gmail.send";
     private static final long STATE_TTL_MS = 10 * 60 * 1000L;
 
     private final AppProperties appProperties;
@@ -53,7 +54,7 @@ public class GoogleOAuthService {
     }
 
     /** Google account profile retrieved during a SSO login. */
-    public record GoogleProfile(String email, String firstName, String lastName) {
+    public record GoogleProfile(String email, String firstName, String lastName, String refreshToken) {
     }
 
     private AppProperties.Mail.Google config() {
@@ -111,8 +112,8 @@ public class GoogleOAuthService {
     }
 
     /**
-     * Builds the Google consent URL for a SSO login, using the dedicated login
-     * redirect URI and profile-only scopes (no offline access, no Gmail scope).
+    * Builds the Google consent URL for SSO login and Gmail sending, using the dedicated
+    * login redirect URI and offline access so the grant can be stored for sending.
      */
     public String buildLoginUrl(String redirectUri, String state) {
         AppProperties.Mail.Google google = config();
@@ -121,8 +122,9 @@ public class GoogleOAuthService {
                 .queryParam("redirect_uri", redirectUri)
                 .queryParam("response_type", "code")
                 .queryParam("scope", LOGIN_SCOPES)
+                .queryParam("access_type", "offline")
                 .queryParam("include_granted_scopes", "true")
-                .queryParam("prompt", "select_account")
+                .queryParam("prompt", "consent select_account")
                 .queryParam("state", state)
                 .encode()
                 .toUriString();
@@ -146,7 +148,7 @@ public class GoogleOAuthService {
         if (accessToken == null) {
             throw new BadRequestException("Réponse Google invalide (access token manquant)");
         }
-        return fetchProfile(accessToken);
+        return fetchProfile(accessToken, asString(body.get("refresh_token")));
     }
 
     /** Obtains a fresh access token from a refresh token. */
@@ -190,7 +192,7 @@ public class GoogleOAuthService {
         }
     }
 
-    private GoogleProfile fetchProfile(String accessToken) {
+    private GoogleProfile fetchProfile(String accessToken, String refreshToken) {
         try {
             @SuppressWarnings("unchecked")
             Map<String, Object> info = restClient.get()
@@ -202,9 +204,12 @@ public class GoogleOAuthService {
             if (email == null || email.isBlank()) {
                 throw new BadRequestException("Impossible de récupérer l'adresse email Google");
             }
+            if (!Boolean.TRUE.equals(info.get("email_verified"))) {
+                throw new BadRequestException("L'adresse email Google n'est pas vérifiée");
+            }
             String firstName = info == null ? null : asString(info.get("given_name"));
             String lastName = info == null ? null : asString(info.get("family_name"));
-            return new GoogleProfile(email.toLowerCase().trim(), firstName, lastName);
+            return new GoogleProfile(email.toLowerCase().trim(), firstName, lastName, refreshToken);
         } catch (BadRequestException e) {
             throw e;
         } catch (org.springframework.web.client.RestClientException e) {

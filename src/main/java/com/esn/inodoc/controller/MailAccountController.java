@@ -44,14 +44,14 @@ public class MailAccountController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('SHARE_MANAGE')")
+    @PreAuthorize("isAuthenticated()")
     public List<MailAccountDto> list() {
         return mailAccountService.list();
     }
 
     /** Starts the Google OAuth2 flow and returns the consent URL. */
     @GetMapping("/oauth/authorize")
-    @PreAuthorize("hasAuthority('SETTINGS_MANAGE')")
+    @PreAuthorize("isAuthenticated()")
     public OAuthAuthorizationResponse authorize(HttpSession session) {
         String url = mailAccountService.beginAuthorization();
         String state = org.springframework.web.util.UriComponentsBuilder.fromUriString(url)
@@ -91,7 +91,7 @@ public class MailAccountController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('SETTINGS_MANAGE')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         mailAccountService.delete(id);
         return ResponseEntity.noContent().build();
