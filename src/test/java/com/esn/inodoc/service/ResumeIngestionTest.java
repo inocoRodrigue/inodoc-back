@@ -165,7 +165,7 @@ class ResumeIngestionTest {
                                   "projects":[{"name":"Project","tasks":"• Design APIs • Review code • Deploy services"}]}]}}
                                 """);
 
-                        assertEquals("Design APIs\\nReview code\\nDeploy services",
+                        assertEquals("Design APIs\nReview code\nDeploy services",
                                 result.dossier().experiences().get(0).projects().get(0).tasks());
                 }
         }

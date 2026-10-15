@@ -38,7 +38,8 @@ class GoogleLoginServiceTest {
                 .build(true).getQueryParams();
         assertTrue(query.getFirst("scope").contains("https://www.googleapis.com/auth/gmail.send"));
         assertTrue("offline".equals(query.getFirst("access_type")));
-        assertTrue(query.getFirst("prompt").contains("consent"));
+        assertTrue(query.getFirst("prompt").contains("select_account"));
+        assertFalse(query.getFirst("prompt").contains("consent"));
 
         assertSame(tokens, service.completeLogin("code", "state"));
         verify(mailAccounts).connectFromSso(userId, "person@example.test", "google-refresh");

@@ -124,7 +124,7 @@ public class GoogleOAuthService {
                 .queryParam("scope", LOGIN_SCOPES)
                 .queryParam("access_type", "offline")
                 .queryParam("include_granted_scopes", "true")
-                .queryParam("prompt", "consent select_account")
+                .queryParam("prompt", "select_account")
                 .queryParam("state", state)
                 .encode()
                 .toUriString();
