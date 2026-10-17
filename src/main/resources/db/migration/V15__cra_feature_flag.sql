@@ -1,0 +1,2 @@
+ALTER TABLE company_settings
+    ADD COLUMN cra_enabled BOOLEAN NOT NULL DEFAULT FALSE;

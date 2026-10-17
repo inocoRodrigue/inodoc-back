@@ -31,6 +31,17 @@ public class CompanySettings extends BaseEntity {
     @Column(name = "stale_dossier_months", nullable = false)
     private int staleDossierMonths = 12;
 
+    @Column(name = "cra_enabled", nullable = false)
+    private boolean craEnabled;
+
+    public boolean isCraEnabled() {
+        return craEnabled;
+    }
+
+    public void setCraEnabled(boolean craEnabled) {
+        this.craEnabled = craEnabled;
+    }
+
     public int getStaleDossierMonths() {
         return staleDossierMonths;
     }

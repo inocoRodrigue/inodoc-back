@@ -2,6 +2,7 @@ package com.esn.inodoc.config;
 
 import com.esn.inodoc.security.JwtAuthenticationFilter;
 import com.esn.inodoc.security.JwtService;
+import com.esn.inodoc.service.CraFeatureService;
 import com.esn.inodoc.security.RestAccessDeniedHandler;
 import com.esn.inodoc.security.RestAuthenticationEntryPoint;
 import com.esn.inodoc.repo.UserRepository;
@@ -26,6 +27,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
     SecurityBoundaryTest.PublicProbe.class})
 class SecurityBoundaryTest {
     @MockitoBean JwtService jwtService;
+    @MockitoBean CraFeatureService craFeatureService;
     @MockitoBean UserRepository users;
     @Autowired MockMvc mvc;
 

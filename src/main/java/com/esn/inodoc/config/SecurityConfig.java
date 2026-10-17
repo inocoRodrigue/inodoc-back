@@ -1,9 +1,11 @@
 package com.esn.inodoc.config;
 
 import com.esn.inodoc.security.JwtAuthenticationFilter;
+import com.esn.inodoc.security.CraFeatureFilter;
 import com.esn.inodoc.security.RequestLoggingFilter;
 import com.esn.inodoc.security.RestAccessDeniedHandler;
 import com.esn.inodoc.security.RestAuthenticationEntryPoint;
+import com.esn.inodoc.service.CraFeatureService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -29,15 +31,18 @@ public class SecurityConfig {
     private final RestAuthenticationEntryPoint authenticationEntryPoint;
     private final RestAccessDeniedHandler accessDeniedHandler;
     private final AppProperties appProperties;
+        private final CraFeatureService craFeatureService;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
                           RestAuthenticationEntryPoint authenticationEntryPoint,
                           RestAccessDeniedHandler accessDeniedHandler,
-                          AppProperties appProperties) {
+                          AppProperties appProperties,
+                          CraFeatureService craFeatureService) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.authenticationEntryPoint = authenticationEntryPoint;
         this.accessDeniedHandler = accessDeniedHandler;
         this.appProperties = appProperties;
+        this.craFeatureService = craFeatureService;
     }
 
     @Bean
@@ -58,6 +63,7 @@ public class SecurityConfig {
                         .authenticationEntryPoint(authenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new CraFeatureFilter(craFeatureService), JwtAuthenticationFilter.class)
                 .addFilterAfter(new RequestLoggingFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
