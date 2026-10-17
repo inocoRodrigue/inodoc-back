@@ -78,6 +78,21 @@ class UserAdministrationTest {
     }
 
     @Test
+    void userCanHoldMultipleRolesAndLastAdminProtectionStillApplies() {
+        var financeManager = new Role();
+        financeManager.setName(RoleName.FINANCE_MANAGER);
+        when(roles.findByName(RoleName.ADMIN)).thenReturn(Optional.of(admin));
+        when(roles.findByName(RoleName.FINANCE_MANAGER)).thenReturn(Optional.of(financeManager));
+
+        var updated = service.update(user.getId(), new UpdateUserRequest(
+                null, null, null, Set.of(RoleName.ADMIN, RoleName.FINANCE_MANAGER)));
+
+        assertEquals(Set.of("ADMIN", "FINANCE_MANAGER"), updated.roles());
+        assertThrows(ConflictException.class, () -> service.update(user.getId(), new UpdateUserRequest(
+                null, null, null, Set.of(RoleName.FINANCE_MANAGER))));
+    }
+
+    @Test
     void nonAdminAndDisabledAdminCanBeRemovedWithoutLockout() {
         user.setEnabled(false);
         service.delete(user.getId());
@@ -140,7 +155,7 @@ class UserAdministrationTest {
 
     @Test
     void signatureIsRejectedForNonBusinessManagersButIdentityRemainsEditable() {
-        for (RoleName name : new RoleName[]{RoleName.INTERNAL, RoleName.EXTERNAL, RoleName.ADMIN}) {
+        for (RoleName name : new RoleName[]{RoleName.INTERNAL, RoleName.ADMIN}) {
             var role = new Role();
             role.setName(name);
             user.setRoles(Set.of(role));

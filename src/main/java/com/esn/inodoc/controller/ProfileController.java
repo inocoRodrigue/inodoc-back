@@ -62,37 +62,37 @@ public class ProfileController {
     }
 
     @GetMapping("/me")
-    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL')")
     public ProfileDto myProfile() {
         return profileService.getMyProfile();
     }
 
     @PutMapping("/me")
-    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL')")
     public ProfileDto updateMyProfile(@Valid @RequestBody ProfileUpsertRequest request) {
         return profileService.updateMyProfile(request);
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL')")
     public ProfileDto get(@PathVariable UUID id) {
         return profileService.get(id);
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL')")
     public ResponseEntity<ProfileDto> create(@Valid @RequestBody ProfileUpsertRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(profileService.create(request));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL')")
     public ProfileDto update(@PathVariable UUID id, @Valid @RequestBody ProfileUpsertRequest request) {
         return profileService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL')")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         profileService.delete(id);
         return ResponseEntity.noContent().build();

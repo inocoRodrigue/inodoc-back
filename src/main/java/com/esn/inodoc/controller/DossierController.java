@@ -42,46 +42,46 @@ public class DossierController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL')")
     public List<DossierSummaryDto> list(@PathVariable UUID profileId) {
         return dossierService.listForProfile(profileId);
     }
 
     @GetMapping("/{dossierId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL')")
     public DossierDto get(@PathVariable UUID profileId, @PathVariable UUID dossierId) {
         return dossierService.get(dossierId);
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL')")
     public ResponseEntity<DossierDto> create(@PathVariable UUID profileId,
                                              @Valid @RequestBody DossierUpsertRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(dossierService.create(profileId, request));
     }
 
     @PutMapping("/{dossierId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL')")
     public DossierDto update(@PathVariable UUID profileId, @PathVariable UUID dossierId,
                              @Valid @RequestBody DossierUpsertRequest request) {
         return dossierService.update(dossierId, request);
     }
 
     @PostMapping("/{dossierId}/master")
-    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL')")
     public DossierDto setMaster(@PathVariable UUID profileId, @PathVariable UUID dossierId) {
         return dossierService.setMaster(dossierId);
     }
 
     @PostMapping("/{dossierId}/adapt-to-mission")
-    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL')")
     public MissionAdaptationDto adapt(@PathVariable UUID profileId, @PathVariable UUID dossierId,
                                       @Valid @RequestBody MissionAdaptationRequest request) {
         return adaptationService.adapt(profileId, dossierId, request);
     }
 
     @DeleteMapping("/{dossierId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL')")
     public ResponseEntity<Void> delete(@PathVariable UUID profileId, @PathVariable UUID dossierId) {
         dossierService.delete(dossierId);
         return ResponseEntity.noContent().build();

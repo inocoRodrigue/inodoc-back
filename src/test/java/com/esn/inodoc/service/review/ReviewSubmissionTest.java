@@ -215,8 +215,10 @@ class ReviewSubmissionTest {
     }
 
         @Test
-        void externalUserCannotReadOrSubmitAnInternalReview() {
-                signIn(roleUser(RoleName.EXTERNAL));
+        void userWithoutAnApplicationRoleCannotReadOrSubmitAnInternalReview() {
+                User user = new User();
+                user.setId(UUID.randomUUID());
+                signIn(user);
                 assertThrows(AccessDeniedException.class, () -> service.getMySubmission(campaign.getId()));
                 assertThrows(AccessDeniedException.class, () -> service.saveMySubmission(campaign.getId(),
                                 new SubmissionRequest(null, false)));

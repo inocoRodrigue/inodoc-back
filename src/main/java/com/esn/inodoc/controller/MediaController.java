@@ -24,7 +24,7 @@ public class MediaController {
     public record UploadResponse(String url) {}
 
     @PostMapping(value = "/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL')")
     public UploadResponse uploadImage(@RequestPart("file") MultipartFile file) {
         return new UploadResponse(service.uploadImage(file));
     }

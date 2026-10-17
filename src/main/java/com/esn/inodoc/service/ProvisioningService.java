@@ -23,7 +23,6 @@ public class ProvisioningService {
         createRole(RoleName.BUSINESS_MANAGER, "Ingenieur d'affaires");
         createRole(RoleName.FINANCE_MANAGER, "Responsable financier");
         createRole(RoleName.INTERNAL, "Collaborateur interne");
-        createRole(RoleName.EXTERNAL, "Candidat externe");
     }
 
     private void createRole(RoleName name, String description) {

@@ -23,7 +23,7 @@ public class CompanySettingsController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL')")
     public CompanyContactDto get() {
         return companySettingsService.get();
     }

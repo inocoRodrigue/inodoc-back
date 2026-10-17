@@ -79,7 +79,6 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
             : roles.contains("ROLE_FINANCE_MANAGER") ? "FINANCE_MANAGER"
                 : roles.contains("ROLE_BUSINESS_MANAGER") ? "BUSINESS_MANAGER"
                 : roles.contains("ROLE_INTERNAL") ? "INTERNAL"
-                : roles.contains("ROLE_EXTERNAL") ? "EXTERNAL"
                 : "AUTHENTICATED";
         return new RequestActor(type);
     }

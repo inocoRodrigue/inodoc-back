@@ -82,8 +82,13 @@ class CareerServiceTest {
     }
 
     @Test
-    void externalUserCannotReadOrCreateCareerEntries() {
-        signIn(RoleName.EXTERNAL);
+    void userWithoutAnApplicationRoleCannotReadOrCreateCareerEntries() {
+        User user = new User();
+        user.setId(UUID.randomUUID());
+        user.setRoles(Set.of());
+        UserPrincipal principal = UserPrincipal.from(user);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()));
         assertThrows(AccessDeniedException.class, service::listMyEntries);
         assertThrows(AccessDeniedException.class, () -> service.createMyEntry(
                 new CareerEntryRequest("Private entry", null, null)));

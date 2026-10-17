@@ -7,6 +7,5 @@ public enum RoleName {
     ADMIN,
     BUSINESS_MANAGER,
     FINANCE_MANAGER,
-    INTERNAL,
-    EXTERNAL
+    INTERNAL
 }
