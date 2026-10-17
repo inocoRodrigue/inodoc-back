@@ -149,7 +149,8 @@ public class ProfileService {
     public boolean canManageAll() {
         return SecurityUtils.getCurrentPrincipal()
                 .map(UserPrincipal::getAuthorityNames)
-                .map(names -> names.contains("ROLE_ADMIN") || names.contains("ROLE_BUSINESS_MANAGER"))
+                .map(names -> names.contains("ROLE_ADMIN") || names.contains("ROLE_BUSINESS_MANAGER")
+                    || names.contains("ROLE_FINANCE_MANAGER"))
                 .orElse(false);
     }
 

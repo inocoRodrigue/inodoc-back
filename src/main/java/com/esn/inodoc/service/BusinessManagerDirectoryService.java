@@ -25,7 +25,10 @@ public class BusinessManagerDirectoryService {
     @Transactional(readOnly = true)
     public List<BusinessManagerDto> listForCurrentInternalUser() {
         requireInternalUserId();
-        return userRepository.findEnabledWithRole(RoleName.BUSINESS_MANAGER).stream()
+        return java.util.stream.Stream.concat(
+                userRepository.findEnabledWithRole(RoleName.BUSINESS_MANAGER).stream(),
+                userRepository.findEnabledWithRole(RoleName.FINANCE_MANAGER).stream())
+            .distinct()
                 .map(this::toDto)
                 .toList();
     }
@@ -34,7 +37,7 @@ public class BusinessManagerDirectoryService {
     public User requireActiveBusinessManager(UUID userId) {
         User user = userRepository.findById(userId)
                 .filter(User::isEnabled)
-                .filter(candidate -> hasRole(candidate, RoleName.BUSINESS_MANAGER))
+                .filter(this::hasManagementRole)
                 .orElseThrow(() -> new NotFoundException("Ingénieur d’affaires introuvable."));
         return user;
     }
@@ -49,7 +52,7 @@ public class BusinessManagerDirectoryService {
 
     public UUID requireBusinessManagerId() {
         UserPrincipal principal = SecurityUtils.requirePrincipal();
-        if (!principal.getAuthorityNames().contains("ROLE_BUSINESS_MANAGER")) {
+        if (!hasManagementRole(principal)) {
             throw new AccessDeniedException("Cette ressource ne vous a pas été partagée.");
         }
         return principal.getUserId();
@@ -61,5 +64,14 @@ public class BusinessManagerDirectoryService {
 
     private boolean hasRole(User user, RoleName roleName) {
         return user.getRoles().stream().anyMatch(role -> role.getName() == roleName);
+    }
+
+    private boolean hasManagementRole(User user) {
+        return hasRole(user, RoleName.BUSINESS_MANAGER) || hasRole(user, RoleName.FINANCE_MANAGER);
+    }
+
+    private boolean hasManagementRole(UserPrincipal principal) {
+        return principal.getAuthorityNames().contains("ROLE_BUSINESS_MANAGER")
+                || principal.getAuthorityNames().contains("ROLE_FINANCE_MANAGER");
     }
 }

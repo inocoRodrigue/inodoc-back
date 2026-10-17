@@ -35,7 +35,6 @@ public class UserPrincipal implements UserDetails {
         Set<GrantedAuthority> auths = new HashSet<>();
         user.getRoles().forEach(role -> {
             auths.add(new SimpleGrantedAuthority("ROLE_" + role.getName().name()));
-            role.getPermissions().forEach(p -> auths.add(new SimpleGrantedAuthority(p.getCode())));
         });
         return new UserPrincipal(user.getId(), user.getEmail(),
                 user.getPasswordHash(), user.isEnabled(), auths);

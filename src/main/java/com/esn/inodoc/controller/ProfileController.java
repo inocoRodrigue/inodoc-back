@@ -40,7 +40,7 @@ public class ProfileController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER')")
     public Page<ProfileSummaryDto> search(
             @RequestParam(required = false) String query,
             @RequestParam(required = false) String skill,
@@ -62,37 +62,37 @@ public class ProfileController {
     }
 
     @GetMapping("/me")
-    @PreAuthorize("hasAuthority('PROFILE_READ')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
     public ProfileDto myProfile() {
         return profileService.getMyProfile();
     }
 
     @PutMapping("/me")
-    @PreAuthorize("hasAuthority('PROFILE_WRITE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
     public ProfileDto updateMyProfile(@Valid @RequestBody ProfileUpsertRequest request) {
         return profileService.updateMyProfile(request);
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('PROFILE_READ')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
     public ProfileDto get(@PathVariable UUID id) {
         return profileService.get(id);
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('PROFILE_WRITE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
     public ResponseEntity<ProfileDto> create(@Valid @RequestBody ProfileUpsertRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(profileService.create(request));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('PROFILE_WRITE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
     public ProfileDto update(@PathVariable UUID id, @Valid @RequestBody ProfileUpsertRequest request) {
         return profileService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('PROFILE_WRITE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         profileService.delete(id);
         return ResponseEntity.noContent().build();

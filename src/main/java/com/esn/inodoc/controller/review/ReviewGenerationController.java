@@ -17,7 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
  */
 @RestController
 @RequestMapping("/reviews/generate")
-@PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER')")
+@PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER')")
 public class ReviewGenerationController {
 
     private final ReviewGenerationService service;

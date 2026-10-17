@@ -1,9 +1,10 @@
 package com.esn.inodoc.config;
 
 import com.esn.inodoc.domain.Profile;
-import com.esn.inodoc.repo.PermissionRepository;
 import com.esn.inodoc.repo.ProfileRepository;
+import com.esn.inodoc.repo.RoleRepository;
 import com.esn.inodoc.repo.UserRepository;
+import com.esn.inodoc.service.ProvisioningService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
@@ -20,14 +21,15 @@ import static org.mockito.Mockito.*;
 class DataInitializerTest {
     @Mock UserRepository users;
     @Mock ProfileRepository profiles;
-    @Mock PermissionRepository permissions;
+    @Mock RoleRepository roles;
+    @Mock ProvisioningService provisioningService;
     @Mock(answer = Answers.RETURNS_DEEP_STUBS) AppProperties properties;
     @InjectMocks DataInitializer initializer;
 
     @Test
     void demoProfileContainsTwoIndependentVersionsWithDifferences() {
         when(properties.getDemo().isEnabled()).thenReturn(true);
-        when(permissions.count()).thenReturn(1L);
+        when(roles.count()).thenReturn(1L);
         when(properties.getAdmin().getEmail()).thenReturn("");
         initializer.run(new DefaultApplicationArguments());
 
@@ -63,11 +65,21 @@ class DataInitializerTest {
 
     @Test
     void productionDoesNotDeleteOrSeedDemoProfiles() {
-        when(permissions.count()).thenReturn(1L);
+        when(roles.count()).thenReturn(1L);
         when(properties.getAdmin().getEmail()).thenReturn("");
         initializer.run(new DefaultApplicationArguments());
         verify(users, never()).deleteAll();
         verify(profiles, never()).deleteAll();
         verify(profiles, never()).save(any());
+    }
+
+    @Test
+    void existingRoleCatalogIsCheckedForNewRolesOnStartup() {
+        when(roles.count()).thenReturn(1L);
+        when(properties.getAdmin().getEmail()).thenReturn("");
+
+        initializer.run(new DefaultApplicationArguments());
+
+        verify(provisioningService).createDefaultRoles();
     }
 }

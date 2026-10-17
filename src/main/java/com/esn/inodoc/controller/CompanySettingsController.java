@@ -23,13 +23,13 @@ public class CompanySettingsController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('PROFILE_READ')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
     public CompanyContactDto get() {
         return companySettingsService.get();
     }
 
     @PutMapping
-    @PreAuthorize("hasAuthority('SETTINGS_MANAGE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER')")
     public CompanyContactDto update(@RequestBody CompanyContactDto request) {
         return companySettingsService.update(request);
     }

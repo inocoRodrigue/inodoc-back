@@ -128,6 +128,17 @@ class UserAdministrationTest {
     }
 
     @Test
+    void financeManagerReceivesOnlyItsRoleAuthorityAndCanUseSignature() {
+        var financeManager = new Role();
+        financeManager.setName(RoleName.FINANCE_MANAGER);
+        user.setRoles(Set.of(financeManager));
+
+        assertTrue(user.canUseMailSignature());
+        assertEquals(Set.of("ROLE_FINANCE_MANAGER"),
+                com.esn.inodoc.security.UserPrincipal.from(user).getAuthorityNames());
+    }
+
+    @Test
     void signatureIsRejectedForNonBusinessManagersButIdentityRemainsEditable() {
         for (RoleName name : new RoleName[]{RoleName.INTERNAL, RoleName.EXTERNAL, RoleName.ADMIN}) {
             var role = new Role();

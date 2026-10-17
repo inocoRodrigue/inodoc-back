@@ -42,53 +42,53 @@ public class DossierController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('PROFILE_READ')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
     public List<DossierSummaryDto> list(@PathVariable UUID profileId) {
         return dossierService.listForProfile(profileId);
     }
 
     @GetMapping("/{dossierId}")
-    @PreAuthorize("hasAuthority('PROFILE_READ')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
     public DossierDto get(@PathVariable UUID profileId, @PathVariable UUID dossierId) {
         return dossierService.get(dossierId);
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('PROFILE_WRITE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
     public ResponseEntity<DossierDto> create(@PathVariable UUID profileId,
                                              @Valid @RequestBody DossierUpsertRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(dossierService.create(profileId, request));
     }
 
     @PutMapping("/{dossierId}")
-    @PreAuthorize("hasAuthority('PROFILE_WRITE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
     public DossierDto update(@PathVariable UUID profileId, @PathVariable UUID dossierId,
                              @Valid @RequestBody DossierUpsertRequest request) {
         return dossierService.update(dossierId, request);
     }
 
     @PostMapping("/{dossierId}/master")
-    @PreAuthorize("hasAuthority('PROFILE_WRITE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
     public DossierDto setMaster(@PathVariable UUID profileId, @PathVariable UUID dossierId) {
         return dossierService.setMaster(dossierId);
     }
 
     @PostMapping("/{dossierId}/adapt-to-mission")
-    @PreAuthorize("hasAuthority('PROFILE_WRITE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
     public MissionAdaptationDto adapt(@PathVariable UUID profileId, @PathVariable UUID dossierId,
                                       @Valid @RequestBody MissionAdaptationRequest request) {
         return adaptationService.adapt(profileId, dossierId, request);
     }
 
     @DeleteMapping("/{dossierId}")
-    @PreAuthorize("hasAuthority('PROFILE_WRITE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
     public ResponseEntity<Void> delete(@PathVariable UUID profileId, @PathVariable UUID dossierId) {
         dossierService.delete(dossierId);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{dossierId}/dossier.pdf")
-    @PreAuthorize("hasAuthority('DOCUMENT_GENERATE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL')")
     public ResponseEntity<byte[]> pdf(@PathVariable UUID profileId, @PathVariable UUID dossierId) {
         DossierService.GeneratedDocument document = dossierService.generatePdf(dossierId);
         HttpHeaders headers = new HttpHeaders();

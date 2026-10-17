@@ -22,7 +22,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/shares")
-@PreAuthorize("hasAuthority('SHARE_MANAGE')")
+@PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER')")
 public class ShareController {
 
     private final ShareService shareService;

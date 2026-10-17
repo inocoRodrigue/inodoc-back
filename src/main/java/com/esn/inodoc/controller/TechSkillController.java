@@ -30,19 +30,19 @@ public class TechSkillController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('PROFILE_READ')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL', 'EXTERNAL')")
     public List<TechSkillDto> list() {
         return techSkillService.list();
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('SETTINGS_MANAGE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER')")
     public TechSkillDto create(@RequestBody TechSkillDto request) {
         return techSkillService.create(request);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('SETTINGS_MANAGE')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable UUID id) {
         techSkillService.delete(id);

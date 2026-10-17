@@ -20,7 +20,6 @@ import com.esn.inodoc.domain.TestResult;
 import com.esn.inodoc.domain.User;
 import com.esn.inodoc.repo.ProfileRepository;
 import com.esn.inodoc.repo.CompanySettingsRepository;
-import com.esn.inodoc.repo.PermissionRepository;
 import com.esn.inodoc.repo.RoleRepository;
 import com.esn.inodoc.repo.SkillCategoryRepository;
 import com.esn.inodoc.repo.TechSkillRepository;
@@ -43,7 +42,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * On startup, provisions the reference data (permissions, roles, skill
+ * On startup, provisions the reference data (roles, skill
  * catalog, company settings) and the administrator account (from the
  * configured credentials).
  *
@@ -62,7 +61,6 @@ public class DataInitializer implements ApplicationRunner {
     private final SkillCategoryRepository skillCategoryRepository;
     private final TechSkillRepository techSkillRepository;
     private final CompanySettingsRepository companySettingsRepository;
-    private final PermissionRepository permissionRepository;
     private final ProvisioningService provisioningService;
     private final PasswordEncoder passwordEncoder;
     private final AppProperties appProperties;
@@ -73,7 +71,6 @@ public class DataInitializer implements ApplicationRunner {
                            SkillCategoryRepository skillCategoryRepository,
                            TechSkillRepository techSkillRepository,
                            CompanySettingsRepository companySettingsRepository,
-                           PermissionRepository permissionRepository,
                            ProvisioningService provisioningService,
                            PasswordEncoder passwordEncoder,
                            AppProperties appProperties) {
@@ -83,7 +80,6 @@ public class DataInitializer implements ApplicationRunner {
         this.skillCategoryRepository = skillCategoryRepository;
         this.techSkillRepository = techSkillRepository;
         this.companySettingsRepository = companySettingsRepository;
-        this.permissionRepository = permissionRepository;
         this.provisioningService = provisioningService;
         this.passwordEncoder = passwordEncoder;
         this.appProperties = appProperties;
@@ -96,9 +92,11 @@ public class DataInitializer implements ApplicationRunner {
             userRepository.deleteAll();
             profileRepository.deleteAll();
         }
-        // Only seed reference data if completely empty (first run)
-        if (permissionRepository.count() == 0) {
+        // Create missing role rows on every startup, including roles added in later releases.
+        if (roleRepository.count() == 0) {
             seedReferenceData();
+        } else {
+            provisioningService.createDefaultRoles();
         }
         // Create admin account from environment variables
         ensureAdminAccount();
@@ -109,12 +107,9 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     /**
-     * Provisions reference data only on first run (when database is empty).
-     * Creates permissions, roles, skill catalog, and company settings.
-     * This is safe for production and only runs once.
+     * Provisions missing roles and initializes reference catalogs when empty.
      */
     private void seedReferenceData() {
-        provisioningService.ensureGlobalPermissions();
         provisioningService.createDefaultRoles();
         if (skillCategoryRepository.count() == 0) {
             seedSkillCategories();
@@ -125,7 +120,7 @@ public class DataInitializer implements ApplicationRunner {
         if (companySettingsRepository.count() == 0) {
             seedCompanySettings();
         }
-        log.info("Reference data initialized (permissions, roles, skills, company settings)");
+        log.info("Reference data initialized (roles, skills, company settings)");
     }
 
     /**

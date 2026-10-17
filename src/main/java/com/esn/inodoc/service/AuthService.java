@@ -184,12 +184,7 @@ public class AuthService {
 
     private TokenResponse issueTokens(User user) {
         List<String> authorities = user.getRoles().stream()
-                .flatMap(role -> {
-                    Set<String> names = new HashSet<>();
-                    names.add("ROLE_" + role.getName().name());
-                    role.getPermissions().forEach(p -> names.add(p.getCode()));
-                    return names.stream();
-                })
+                .map(role -> "ROLE_" + role.getName().name())
                 .distinct()
                 .toList();
 

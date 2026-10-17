@@ -52,6 +52,15 @@ class UserAccessControlTest {
     }
 
     @Test
+    @WithMockUser(roles = "FINANCE_MANAGER")
+    void financeManagerCannotAdministerUsers() throws Exception {
+        mvc.perform(get("/users")).andExpect(status().isForbidden());
+        mvc.perform(put("/users/" + UUID.randomUUID() + "/role")
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"role\":\"ADMIN\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     @WithMockUser(roles = "ADMIN")
     void administratorCanListAndMalformedRolePayloadReturns400() throws Exception {
         mvc.perform(get("/users")).andExpect(status().isOk());

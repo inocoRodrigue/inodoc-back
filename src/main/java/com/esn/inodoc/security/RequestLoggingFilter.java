@@ -76,6 +76,7 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toSet());
         String type = roles.contains("ROLE_ADMIN") ? "ADMIN"
+            : roles.contains("ROLE_FINANCE_MANAGER") ? "FINANCE_MANAGER"
                 : roles.contains("ROLE_BUSINESS_MANAGER") ? "BUSINESS_MANAGER"
                 : roles.contains("ROLE_INTERNAL") ? "INTERNAL"
                 : roles.contains("ROLE_EXTERNAL") ? "EXTERNAL"

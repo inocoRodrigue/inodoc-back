@@ -182,7 +182,8 @@ public class CareerService {
     private void requireManager() {
         boolean manager = SecurityUtils.getCurrentPrincipal()
                 .map(UserPrincipal::getAuthorityNames)
-                .map(names -> names.contains("ROLE_ADMIN") || names.contains("ROLE_BUSINESS_MANAGER"))
+                .map(names -> names.contains("ROLE_ADMIN") || names.contains("ROLE_BUSINESS_MANAGER")
+                    || names.contains("ROLE_FINANCE_MANAGER"))
                 .orElse(false);
         if (!manager) {
             throw new AccessDeniedException("Action réservée aux ingénieurs d'affaires et administrateurs.");

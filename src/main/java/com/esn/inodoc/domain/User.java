@@ -51,7 +51,8 @@ public class User extends BaseEntity {
     }
 
     public boolean canUseMailSignature() {
-        return roles.stream().anyMatch(role -> role.getName() == RoleName.BUSINESS_MANAGER);
+        return roles.stream().anyMatch(role -> role.getName() == RoleName.BUSINESS_MANAGER
+            || role.getName() == RoleName.FINANCE_MANAGER);
     }
 
     public String getSignature() {
