@@ -18,13 +18,21 @@ import com.esn.inodoc.domain.SkillGroup;
 import com.esn.inodoc.domain.TechSkill;
 import com.esn.inodoc.domain.TestResult;
 import com.esn.inodoc.domain.User;
+import com.esn.inodoc.domain.cra.CraDayEntry;
+import com.esn.inodoc.domain.cra.CraDeclaration;
+import com.esn.inodoc.domain.cra.CraDeclarationStatus;
+import com.esn.inodoc.domain.cra.CraProject;
+import com.esn.inodoc.domain.cra.CraProjectType;
 import com.esn.inodoc.repo.ProfileRepository;
 import com.esn.inodoc.repo.CompanySettingsRepository;
 import com.esn.inodoc.repo.RoleRepository;
 import com.esn.inodoc.repo.SkillCategoryRepository;
 import com.esn.inodoc.repo.TechSkillRepository;
 import com.esn.inodoc.repo.UserRepository;
+import com.esn.inodoc.repo.cra.CraDeclarationRepository;
+import com.esn.inodoc.repo.cra.CraProjectRepository;
 import com.esn.inodoc.service.ProvisioningService;
+import com.esn.inodoc.service.cra.CraProjectService;
 import com.esn.inodoc.config.AppProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +43,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.DayOfWeek;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -61,7 +73,10 @@ public class DataInitializer implements ApplicationRunner {
     private final SkillCategoryRepository skillCategoryRepository;
     private final TechSkillRepository techSkillRepository;
     private final CompanySettingsRepository companySettingsRepository;
+    private final CraDeclarationRepository craDeclarationRepository;
+    private final CraProjectRepository craProjectRepository;
     private final ProvisioningService provisioningService;
+    private final CraProjectService craProjectService;
     private final PasswordEncoder passwordEncoder;
     private final AppProperties appProperties;
 
@@ -71,7 +86,10 @@ public class DataInitializer implements ApplicationRunner {
                            SkillCategoryRepository skillCategoryRepository,
                            TechSkillRepository techSkillRepository,
                            CompanySettingsRepository companySettingsRepository,
+                           CraDeclarationRepository craDeclarationRepository,
+                           CraProjectRepository craProjectRepository,
                            ProvisioningService provisioningService,
+                           CraProjectService craProjectService,
                            PasswordEncoder passwordEncoder,
                            AppProperties appProperties) {
         this.userRepository = userRepository;
@@ -80,7 +98,10 @@ public class DataInitializer implements ApplicationRunner {
         this.skillCategoryRepository = skillCategoryRepository;
         this.techSkillRepository = techSkillRepository;
         this.companySettingsRepository = companySettingsRepository;
+        this.craDeclarationRepository = craDeclarationRepository;
+        this.craProjectRepository = craProjectRepository;
         this.provisioningService = provisioningService;
+        this.craProjectService = craProjectService;
         this.passwordEncoder = passwordEncoder;
         this.appProperties = appProperties;
     }
@@ -98,11 +119,13 @@ public class DataInitializer implements ApplicationRunner {
         } else {
             provisioningService.createDefaultRoles();
         }
+        craProjectService.ensureDefaultProjects();
         // Create admin account from environment variables
         ensureAdminAccount();
         // Demo data: a fully populated competence dossier for visual preview.
         if (appProperties.getDemo().isEnabled()) {
             seedDemoDossier();
+            //seedDemoAdminDeclarations();
         }
     }
 
@@ -110,6 +133,7 @@ public class DataInitializer implements ApplicationRunner {
      * Provisions missing roles and initializes reference catalogs when empty.
      */
     private void seedReferenceData() {
+        craDeclarationRepository.deleteAll();
         provisioningService.createDefaultRoles();
         if (skillCategoryRepository.count() == 0) {
             seedSkillCategories();
@@ -214,6 +238,55 @@ public class DataInitializer implements ApplicationRunner {
             user.setProfile(profile);
         }
         userRepository.save(user);
+    }
+
+    private void seedDemoAdminDeclarations() {
+        String email = appProperties.getAdmin().getEmail();
+        if (email == null || email.isBlank()) return;
+        User admin = userRepository.findByEmailIgnoreCase(email.trim())
+                .orElse(null);
+        if (admin == null) return;
+
+        List<CraProject> sharedProjects = craProjectRepository.findAllByOrderByTypeAscNameAsc().stream()
+                .filter(project -> project.getType() == CraProjectType.ACCESS_ALL)
+                .toList();
+        if (sharedProjects.isEmpty()) return;
+
+        YearMonth current = YearMonth.now();
+        for (int monthsAgo = 1; monthsAgo <= 4; monthsAgo++) {
+            seedDemoDeclaration(admin, current.minusMonths(monthsAgo), monthsAgo, sharedProjects);
+        }
+        for (int monthsAgo : new int[]{12, 13, 14, 15, 16, 24, 25, 26, 27, 28}) {
+            seedDemoDeclaration(admin, current.minusMonths(monthsAgo), monthsAgo, sharedProjects);
+        }
+    }
+
+    private void seedDemoDeclaration(User admin, YearMonth period, int seedOffset, List<CraProject> sharedProjects) {
+        if (craDeclarationRepository.findByCollaborator_IdAndYearAndMonth(
+                admin.getId(), period.getYear(), period.getMonthValue()).isPresent()) {
+            return;
+        }
+
+        CraDeclaration declaration = new CraDeclaration();
+        declaration.setCollaborator(admin);
+        declaration.setYear(period.getYear());
+        declaration.setMonth(period.getMonthValue());
+        declaration.setStatus(CraDeclarationStatus.DECLARED);
+        declaration.setDeclaredAt(period.atEndOfMonth().atTime(16, 30)
+                .atZone(ZoneId.systemDefault()).toInstant());
+
+        for (int day = 1; day <= period.lengthOfMonth(); day++) {
+            LocalDate workDate = period.atDay(day);
+            if (workDate.getDayOfWeek() == DayOfWeek.SATURDAY || workDate.getDayOfWeek() == DayOfWeek.SUNDAY) {
+                continue;
+            }
+            CraDayEntry entry = new CraDayEntry();
+            entry.setDeclaration(declaration);
+            entry.setWorkDate(workDate);
+            entry.setProject(sharedProjects.get((day + seedOffset) % sharedProjects.size()));
+            declaration.getEntries().add(entry);
+        }
+        craDeclarationRepository.save(declaration);
     }
 
     /**

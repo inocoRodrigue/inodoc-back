@@ -51,7 +51,7 @@ class UserAdministrationTest {
         assertThrows(ConflictException.class, () -> service.delete(user.getId()));
         assertTrue(user.isEnabled());
         assertEquals(Set.of(admin), user.getRoles());
-        verify(users, never()).delete(any());
+        verify(users, never()).delete(any(User.class));
         verifyNoInteractions(cleanup);
     }
 

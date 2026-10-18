@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS cra_work_schedules;

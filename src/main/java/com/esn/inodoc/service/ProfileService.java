@@ -60,7 +60,7 @@ public class ProfileService {
         Profile profile = requireProfile(id);
         assertCanAccess(profile.getId());
         User account = userRepository.findByProfileId(profile.getId()).orElse(null);
-        return ProfileMapper.toDto(profile, account, companySettingsService.get().staleDossierMonths());
+        return profileDto(profile, account);
     }
 
     @Transactional(readOnly = true)
@@ -69,26 +69,28 @@ public class ProfileService {
         if (ownProfileId == null) {
             throw new NotFoundException("Aucun dossier de compétences associé à votre compte");
         }
-        return ProfileMapper.toDto(requireProfile(ownProfileId), null,
-            companySettingsService.get().staleDossierMonths());
+        return profileDto(requireProfile(ownProfileId), null);
     }
 
     @Transactional
     public ProfileDto create(ProfileUpsertRequest request) {
         Profile profile = new Profile();
         ProfileMapper.apply(profile, request);
+        if (!canManageAll()) profile.setDailyRate(null);
         // Rule: a profile is internal only if it is linked to an account.
         // On creation, no account is associated => external.
         profile.setStatus(ProfileStatus.EXTERNAL);
         profile = profileRepository.save(profile);
-        return ProfileMapper.toDto(profile, null, companySettingsService.get().staleDossierMonths());
+        return profileDto(profile, null);
     }
 
     @Transactional
     public ProfileDto update(UUID id, ProfileUpsertRequest request) {
         Profile profile = requireProfile(id);
         assertCanAccess(profile.getId());
+        Integer existingDailyRate = profile.getDailyRate();
         ProfileMapper.apply(profile, request);
+        if (!canManageAll()) profile.setDailyRate(existingDailyRate);
         User account = userRepository.findByProfileId(profile.getId()).orElse(null);
         if (account != null) {
             // The identity of a dossier linked to an internal account comes from the account.
@@ -101,7 +103,7 @@ public class ProfileService {
             profile.setStatus(ProfileStatus.EXTERNAL);
         }
         profile = profileRepository.save(profile);
-        return ProfileMapper.toDto(profile, account, companySettingsService.get().staleDossierMonths());
+        return profileDto(profile, account);
     }
 
     @Transactional
@@ -152,6 +154,15 @@ public class ProfileService {
                 .map(names -> names.contains("ROLE_ADMIN") || names.contains("ROLE_BUSINESS_MANAGER")
                     || names.contains("ROLE_FINANCE_MANAGER"))
                 .orElse(false);
+    }
+
+    private ProfileDto profileDto(Profile profile, User account) {
+        int staleAfterMonths = companySettingsService.get().staleDossierMonths();
+        ProfileDto dto = ProfileMapper.toDto(profile, account, staleAfterMonths);
+        if (canManageAll()) return dto;
+        return new ProfileDto(dto.id(), dto.firstName(), dto.lastName(), dto.email(), dto.phone(), dto.address(),
+                dto.location(), dto.availabilityStatus(), dto.availableFrom(), dto.status(), null, dto.dossiers(),
+                dto.accountUserId(), dto.accountEmail(), dto.createdAt(), dto.updatedAt(), dto.imageUrl());
     }
 
     private UUID currentOwnProfileId() {
