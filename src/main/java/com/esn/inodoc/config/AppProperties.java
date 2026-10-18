@@ -100,7 +100,7 @@ public class AppProperties {
     }
 
     /**
-    * Bootstrap administrator, created only when the application database is empty.
+        * Bootstrap administrator, created on every startup if its configured email is absent.
      * Its credentials come from environment variables in production.
      */
     public static class Admin {

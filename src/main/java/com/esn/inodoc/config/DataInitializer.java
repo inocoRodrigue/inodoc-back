@@ -1,6 +1,7 @@
 package com.esn.inodoc.config;
 
 import com.esn.inodoc.domain.CompanySettings;
+import com.esn.inodoc.domain.Role;
 import com.esn.inodoc.domain.RoleName;
 import com.esn.inodoc.domain.SkillCategory;
 import com.esn.inodoc.domain.TechSkill;
@@ -72,8 +73,7 @@ public class DataInitializer implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
-        if (!isDatabaseEmpty()) return;
-        initializeAfterReset();
+        if (isDatabaseEmpty()) initializeAfterReset();
         initializeAdminAccount();
     }
 
@@ -123,7 +123,7 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     /**
-    * Creates the bootstrap administrator only during empty-database initialization.
+        * Creates the configured bootstrap administrator on startup only when absent.
      *
      * Environment variables:
      *   INODOC_ADMIN_EMAIL - Administrator email (required)
@@ -132,6 +132,10 @@ public class DataInitializer implements ApplicationRunner {
     private void initializeAdminAccount() {
         AppProperties.Admin admin = appProperties.getAdmin();
         String email = admin.getEmail() == null ? "" : admin.getEmail().toLowerCase().trim();
+        if (!email.isBlank() && userRepository.existsByEmailIgnoreCase(email)) {
+            log.info("Cet admin exist déjà!");
+            return;
+        }
         String password = admin.getPassword() == null ? "" : admin.getPassword();
 
         if (email.isBlank() || password.length() < 8) {
@@ -145,7 +149,12 @@ public class DataInitializer implements ApplicationRunner {
         user.setLastName(admin.getLastName());
         user.setEnabled(true);
         user.setRoles(new HashSet<>(Set.of(roleRepository.findByName(RoleName.ADMIN)
-            .orElseThrow(() -> new IllegalStateException("ADMIN role not found")))));
+                .orElseGet(() -> {
+                    Role role = new Role();
+                    role.setName(RoleName.ADMIN);
+                    role.setDescription("Administrateur");
+                    return roleRepository.save(role);
+                }))));
         userRepository.save(user);
         log.info("Admin account initialized");
     }

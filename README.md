@@ -129,13 +129,16 @@ En multi-instance, conserver l'affinite de session pendant OAuth.
 
 Au demarrage, les referentiels ne sont crees que si toutes les tables applicatives
 sont vides (hors historique Flyway). Une base contenant deja des donnees, meme
-partielles, n'est pas modifiee. Les nouveaux roles d'une version future devront
+partielles, ne recoit pas de nouveaux referentiels, sauf le compte administrateur
+configure et son role ADMIN s'ils sont absents. Les nouveaux roles d'une version future devront
 etre ajoutes par une migration explicite, pas par un script de demarrage.
 
 Seuls les roles, catalogues de competences, parametres d'entreprise, activites CRA,
 documents de reference et modeles de carnet/entretiens utilises sont initialises.
-Aucun faux utilisateur, profil, dossier ou CRA n'est genere. La creation initiale
-du compte administrateur exige un email et un mot de passe d'au moins 8 caracteres ;
+Aucun faux utilisateur, profil, dossier ou CRA n'est genere. A chaque demarrage,
+le compte administrateur configure est cree si son email n'existe pas encore,
+meme sur une base non vide. Un compte existant n'est ni modifie, ni reactive,
+et son mot de passe n'est pas remplace. La creation exige un email et un mot de passe d'au moins 8 caracteres ;
 sinon toute l'initialisation est annulee. Les initialisations PostgreSQL concurrentes
 sont serialisees par un verrou transactionnel. Un reset recree ces referentiels,
 mais conserve uniquement le compte administrateur appelant.

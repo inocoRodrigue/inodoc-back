@@ -41,12 +41,17 @@ class DataInitializerTest {
     @InjectMocks DataInitializer initializer;
 
         @Test
-        void nonEmptyDatabaseDoesNotInitializeAnyData() {
+        void nonEmptyDatabaseWithExistingAdminDoesNotInitializeAnyData() {
         when(jdbc.execute(org.mockito.ArgumentMatchers.<org.springframework.jdbc.core.ConnectionCallback<Boolean>>any()))
             .thenReturn(false);
+        when(properties.getAdmin().getEmail()).thenReturn(" Admin@Example.test ");
+        when(users.existsByEmailIgnoreCase("admin@example.test")).thenReturn(true);
         initializer.run(new DefaultApplicationArguments());
-        verifyNoInteractions(users, roles, categories, skills, company, provisioningService, craProjectService,
-                passwordEncoder, properties, careerDataInitializer);
+        verify(users).existsByEmailIgnoreCase("admin@example.test");
+        verifyNoMoreInteractions(users);
+        verifyNoInteractions(roles, categories, skills, company, provisioningService, craProjectService,
+            passwordEncoder, careerDataInitializer);
+        verify(properties.getAdmin(), never()).getPassword();
         }
 
     @Test
@@ -93,7 +98,7 @@ class DataInitializerTest {
     }
 
     @Test
-        void existingBusinessDataPreventsInitializationEvenWithoutRolesOrUsers() {
+        void existingBusinessDataDoesNotPreventCreatingMissingAdminAndRole() {
         var actualJdbc = new org.springframework.jdbc.core.JdbcTemplate(
             new org.springframework.jdbc.datasource.DriverManagerDataSource(
                 "jdbc:h2:mem:initializer;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE", "sa", ""));
@@ -104,10 +109,36 @@ class DataInitializerTest {
         actualJdbc.execute("INSERT INTO review_forms VALUES (1)");
         var actual = new DataInitializer(users, roles, categories, skills, company, provisioningService,
                 craProjectService, passwordEncoder, properties, actualJdbc, careerDataInitializer);
+        when(properties.getAdmin().getEmail()).thenReturn("admin@example.test");
+        when(properties.getAdmin().getPassword()).thenReturn("bootstrap-password");
+        when(passwordEncoder.encode("bootstrap-password")).thenReturn("encoded-password");
+        when(roles.save(any(Role.class))).thenAnswer(invocation -> invocation.getArgument(0));
         actual.run(new DefaultApplicationArguments());
-        verifyNoInteractions(users, roles, categories, skills, company, provisioningService, craProjectService,
-                passwordEncoder, properties, careerDataInitializer);
+        var captured = org.mockito.ArgumentCaptor.forClass(User.class);
+        verify(users).save(captured.capture());
+        assertEquals("admin@example.test", captured.getValue().getEmail());
+        assertEquals("encoded-password", captured.getValue().getPasswordHash());
+        assertEquals(RoleName.ADMIN, captured.getValue().getRoles().iterator().next().getName());
+        var createdRole = org.mockito.ArgumentCaptor.forClass(Role.class);
+        verify(roles).save(createdRole.capture());
+        assertEquals(RoleName.ADMIN, createdRole.getValue().getName());
+        verifyNoInteractions(categories, skills, company, provisioningService, craProjectService, careerDataInitializer);
+        assertEquals(1, actualJdbc.queryForObject("SELECT COUNT(*) FROM review_forms", Integer.class));
     }
+
+        @Test
+        void missingAdminIsCreatedWithoutRecreatingAnExistingAdminRole() {
+        when(jdbc.execute(org.mockito.ArgumentMatchers.<org.springframework.jdbc.core.ConnectionCallback<Boolean>>any()))
+            .thenReturn(false);
+        when(properties.getAdmin().getEmail()).thenReturn("admin@example.test");
+        when(properties.getAdmin().getPassword()).thenReturn("bootstrap-password");
+        when(passwordEncoder.encode("bootstrap-password")).thenReturn("encoded-password");
+        when(roles.findByName(RoleName.ADMIN)).thenReturn(Optional.of(role(RoleName.ADMIN)));
+        initializer.run(new DefaultApplicationArguments());
+        verify(users).save(any(User.class));
+        verify(roles, never()).save(any());
+        verifyNoInteractions(categories, skills, company, provisioningService, craProjectService, careerDataInitializer);
+        }
 
     private Role role(RoleName name) {
         Role role = new Role();
