@@ -9,11 +9,9 @@ import com.esn.inodoc.repo.review.ReviewFormRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.DefaultApplicationArguments;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -33,14 +31,12 @@ class CareerDataInitializerTest {
         var savedForms = new ArrayList<ReviewForm>();
         var savedDocuments = new ArrayList<ReferenceDocument>();
 
-        when(careerTemplates.findFirstByOrderByCreatedAtAsc())
-                .thenAnswer(invocation -> Optional.ofNullable(savedTemplate.get()));
+        when(careerTemplates.count()).thenAnswer(invocation -> savedTemplate.get() == null ? 0L : 1L);
         when(careerTemplates.save(any(CareerTemplate.class))).thenAnswer(invocation -> {
             CareerTemplate template = invocation.getArgument(0);
             savedTemplate.set(template);
             return template;
         });
-        when(reviewForms.findAllByOrderByCreatedAtDesc()).thenAnswer(invocation -> List.copyOf(savedForms));
         when(reviewForms.save(any(ReviewForm.class))).thenAnswer(invocation -> {
             ReviewForm form = invocation.getArgument(0);
             if (!savedForms.contains(form)) savedForms.add(form);
@@ -57,15 +53,17 @@ class CareerDataInitializerTest {
 
         var initializer = new CareerDataInitializer(careerTemplates, reviewForms,
                 referenceDocuments, new ObjectMapper());
-        var arguments = new DefaultApplicationArguments();
-        initializer.run(arguments);
+        initializer.initialize();
+        assertEquals(2, anchorCount(new ObjectMapper().readTree(savedTemplate.get().getEntrySchema())));
         UUID managerId = UUID.randomUUID();
         savedTemplate.get().setCreatedBy(managerId);
         savedForms.forEach(form -> form.setCreatedBy(managerId));
         savedTemplate.get().setEntrySchema(removeAnchors(savedTemplate.get().getEntrySchema()));
         savedForms.forEach(form -> form.setSchema(removeAnchors(form.getSchema())));
-        initializer.run(arguments);
-        initializer.run(arguments);
+        String customizedTemplate = savedTemplate.get().getEntrySchema();
+        initializer.initialize();
+        initializer.initialize();
+        assertEquals(customizedTemplate, savedTemplate.get().getEntrySchema());
 
         assertEquals("Carnet carrière INOCO", savedTemplate.get().getTitle());
         assertEquals(managerId, savedTemplate.get().getCreatedBy());
@@ -76,28 +74,12 @@ class CareerDataInitializerTest {
         assertTrue(savedForms.stream().anyMatch(form -> form.getTitle().equals("Préparation à l'entretien annuel INOCO")));
         assertTrue(savedForms.stream().anyMatch(form -> form.getTitle().equals("Préparation à l'entretien semi-annuel INOCO")));
 
-        String valuableTaskReferenceId = savedDocuments.stream()
-                .filter(document -> document.getTitle().equals("Tâches valorisables INOCO 2025"))
-                .findFirst().orElseThrow().getId().toString();
         JsonNode careerSchema = new ObjectMapper().readTree(savedTemplate.get().getEntrySchema());
-        assertEquals(valuableTaskReferenceId, field(careerSchema, "valuable-tasks-reference-anchor")
-                .path("referenceId").asText());
         for (ReviewForm form : savedForms) {
             JsonNode reviewSchema = new ObjectMapper().readTree(form.getSchema());
-            assertEquals(valuableTaskReferenceId, field(reviewSchema, "valuable-tasks-reference-anchor")
-                    .path("referenceId").asText());
-            assertEquals(2, anchorCount(reviewSchema));
+            assertEquals(0, anchorCount(reviewSchema));
         }
-        assertEquals(2, anchorCount(careerSchema));
-    }
-
-    private JsonNode field(JsonNode schema, String id) {
-        for (JsonNode section : schema.path("sections")) {
-            for (JsonNode field : section.path("fields")) {
-                if (id.equals(field.path("id").asText())) return field;
-            }
-        }
-        return com.fasterxml.jackson.databind.node.MissingNode.getInstance();
+        assertEquals(0, anchorCount(careerSchema));
     }
 
     private int anchorCount(JsonNode schema) {

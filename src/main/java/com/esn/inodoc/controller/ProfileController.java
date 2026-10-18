@@ -57,7 +57,7 @@ public class ProfileController {
         ProfileSearchCriteria criteria = new ProfileSearchCriteria(
                 query, skill, technology, location, languages, availability, status,
                 minYearsOfExperience, availableFrom);
-        PageRequest pageable = PageRequest.of(page, size, Sort.by("lastName").ascending());
+        PageRequest pageable = PageRequest.of(Math.max(0, page), Math.max(1, Math.min(size, 100)), Sort.by("lastName").ascending());
         return profileService.search(criteria, pageable);
     }
 
@@ -80,7 +80,7 @@ public class ProfileController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER', 'INTERNAL')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BUSINESS_MANAGER', 'FINANCE_MANAGER')")
     public ResponseEntity<ProfileDto> create(@Valid @RequestBody ProfileUpsertRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(profileService.create(request));
     }

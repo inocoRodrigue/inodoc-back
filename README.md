@@ -119,11 +119,28 @@ En multi-instance, conserver l'affinite de session pendant OAuth.
 
 - Utiliser deux cles Base64 aleatoires distinctes d'au moins 32 octets pour JWT et mail. Changer la cle mail necessite de reconnecter les comptes Google existants.
 - Garder `SESSION_COOKIE_SECURE=true` sous HTTPS ; utiliser `false` uniquement pour le developpement local HTTP.
-- Garder `INODOC_DEMO_DATA=false` en production : le mode demo efface les utilisateurs et profils avant leur initialisation.
+- Les donnees de demonstration et leur option d'activation ont ete supprimees ; un redemarrage ne supprime ni ne regenere les donnees.
 - Garder `AI_TLS_SKIP_CERTIFICATE_VERIFICATION=false` ; ne transmettre a l'IA que des donnees autorisees.
 - Autoriser le backend a lire, ecrire et supprimer les objets S3 ; sauvegarder la base avant les migrations.
 
 ## Sauvegarde, restauration et reset
+
+### Initialisation
+
+Au demarrage, les referentiels ne sont crees que si toutes les tables applicatives
+sont vides (hors historique Flyway). Une base contenant deja des donnees, meme
+partielles, n'est pas modifiee. Les nouveaux roles d'une version future devront
+etre ajoutes par une migration explicite, pas par un script de demarrage.
+
+Seuls les roles, catalogues de competences, parametres d'entreprise, activites CRA,
+documents de reference et modeles de carnet/entretiens utilises sont initialises.
+Aucun faux utilisateur, profil, dossier ou CRA n'est genere. La creation initiale
+du compte administrateur exige un email et un mot de passe d'au moins 8 caracteres ;
+sinon toute l'initialisation est annulee. Les initialisations PostgreSQL concurrentes
+sont serialisees par un verrou transactionnel. Un reset recree ces referentiels,
+mais conserve uniquement le compte administrateur appelant.
+
+### Actions administrateur
 
 Dans Parametres > Donnees, seul le role ADMIN peut exporter, importer ou
 reinitialiser l'application. Les endpoints `/api/admin/application-data`
@@ -172,8 +189,7 @@ controles cote serveur.
 	le ZIP n'est pas chiffre et doit etre conserve dans un emplacement securise.
 - Les secrets d'environnement, la configuration d'infrastructure et l'historique
 	Flyway ne sont pas exportes. Conserver `INODOC_MAIL_SECRET_KEY` pour dechiffrer
-	les comptes Google restaures ; sans cette cle, les reconnecter. Garder
-	`INODOC_DEMO_DATA=false` pour ne pas effacer les donnees au redemarrage.
+	les comptes Google restaures ; sans cette cle, les reconnecter.
 - Limite : 256 Mo pour le contenu JSON decompresse (medias encodes inclus) et
 	pour le ZIP importe. Adapter aussi la limite du reverse proxy si necessaire.
 	Les operations verrouillent les ecritures sur les tables pendant la transaction ;

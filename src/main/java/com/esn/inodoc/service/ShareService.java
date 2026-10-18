@@ -178,7 +178,7 @@ public class ShareService {
                 DossierMapper.toDto(dossier, storage::signedUrl),
                 profileInitials(dossier),
                 companySettingsService.get(),
-                link.isEditable());
+                link.isEditable() && !dossier.isMaster());
     }
 
     @Transactional
@@ -188,6 +188,9 @@ public class ShareService {
             throw new BadRequestException("Ce lien ne permet pas la modification");
         }
         CompetenceDossier dossier = link.getDossier();
+        if (dossier.isMaster()) {
+            throw new BadRequestException("Le dossier master ne peut pas etre modifie par un lien de partage");
+        }
         DossierMapper.apply(dossier, request.dossier(), storage::storedUrl);
         dossier = dossierRepository.save(dossier);
         return DossierMapper.toDto(dossier, storage::signedUrl);

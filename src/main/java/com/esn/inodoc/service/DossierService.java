@@ -65,6 +65,9 @@ public class DossierService {
         profileService.assertCanAccess(profileId);
 
         List<CompetenceDossier> existing = dossierRepository.findByProfileId(profileId);
+        if (!existing.isEmpty() && Boolean.TRUE.equals(request.master()) && !profileService.canManageAll()) {
+            throw new AccessDeniedException("Seul un gestionnaire peut remplacer la version master");
+        }
 
         CompetenceDossier dossier = new CompetenceDossier();
         dossier.setProfile(profile);

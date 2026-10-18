@@ -1,18 +1,13 @@
 package com.esn.inodoc.config;
 
-import com.esn.inodoc.domain.Profile;
 import com.esn.inodoc.domain.Role;
 import com.esn.inodoc.domain.RoleName;
 import com.esn.inodoc.domain.User;
-import com.esn.inodoc.domain.cra.CraDeclaration;
-import com.esn.inodoc.domain.cra.CraDeclarationStatus;
-import com.esn.inodoc.domain.cra.CraProject;
-import com.esn.inodoc.domain.cra.CraProjectType;
-import com.esn.inodoc.repo.ProfileRepository;
 import com.esn.inodoc.repo.RoleRepository;
 import com.esn.inodoc.repo.UserRepository;
-import com.esn.inodoc.repo.cra.CraDeclarationRepository;
-import com.esn.inodoc.repo.cra.CraProjectRepository;
+import com.esn.inodoc.repo.CompanySettingsRepository;
+import com.esn.inodoc.repo.SkillCategoryRepository;
+import com.esn.inodoc.repo.TechSkillRepository;
 import com.esn.inodoc.service.ProvisioningService;
 import com.esn.inodoc.service.cra.CraProjectService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,12 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.DefaultApplicationArguments;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.YearMonth;
-import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -38,125 +28,85 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class DataInitializerTest {
     @Mock UserRepository users;
-    @Mock ProfileRepository profiles;
     @Mock RoleRepository roles;
+    @Mock SkillCategoryRepository categories;
+    @Mock TechSkillRepository skills;
+    @Mock CompanySettingsRepository company;
     @Mock PasswordEncoder passwordEncoder;
     @Mock ProvisioningService provisioningService;
     @Mock CraProjectService craProjectService;
-    @Mock CraDeclarationRepository craDeclarations;
-    @Mock CraProjectRepository craProjects;
     @Mock(answer = Answers.RETURNS_DEEP_STUBS) AppProperties properties;
+        @Mock org.springframework.jdbc.core.JdbcTemplate jdbc;
+        @Mock CareerDataInitializer careerDataInitializer;
     @InjectMocks DataInitializer initializer;
 
-    @Test
-    void demoProfileContainsTwoIndependentVersionsWithDifferences() {
-        when(properties.getDemo().isEnabled()).thenReturn(true);
-        when(roles.count()).thenReturn(1L);
-        when(properties.getAdmin().getEmail()).thenReturn("");
+        @Test
+        void nonEmptyDatabaseDoesNotInitializeAnyData() {
+        when(jdbc.execute(org.mockito.ArgumentMatchers.<org.springframework.jdbc.core.ConnectionCallback<Boolean>>any()))
+            .thenReturn(false);
         initializer.run(new DefaultApplicationArguments());
-
-        var captured = org.mockito.ArgumentCaptor.forClass(Profile.class);
-        verify(profiles).save(captured.capture());
-        Profile profile = captured.getValue();
-        assertEquals("Alex", profile.getFirstName());
-        assertEquals("Exemple", profile.getLastName());
-        assertEquals("alex.exemple@example.com", profile.getEmail());
-        assertNull(profile.getPhone());
-        assertNull(profile.getAddress());
-        assertEquals(2, profile.getDossiers().size());
-        var master = profile.getDossiers().get(0);
-        var comparison = profile.getDossiers().get(1);
-        assertTrue(master.isMaster());
-        assertFalse(comparison.isMaster());
-        assertNotEquals(master.getLabel(), comparison.getLabel());
-        assertNotEquals(master.getHeadline(), comparison.getHeadline());
-        assertEquals(9, master.getYearsOfExperience());
-        assertEquals(10, comparison.getYearsOfExperience());
-        assertNotEquals(master.getSkillGroups().get(4).getContent(), comparison.getSkillGroups().get(4).getContent());
-        assertEquals(master.getExperiences().size(), comparison.getExperiences().size());
-        assertEquals(master.getEducations().size(), comparison.getEducations().size());
-        assertEquals(master.getCertifications().size(), comparison.getCertifications().size());
-        assertEquals(master.getReferences().size(), comparison.getReferences().size());
-        assertEquals(master.getTestResults().size(), comparison.getTestResults().size());
-        assertNotSame(master.getExperiences().get(0), comparison.getExperiences().get(0));
-        assertNotSame(master.getExperiences().get(0).getProjects().get(0), comparison.getExperiences().get(0).getProjects().get(0));
-        assertSame(profile, comparison.getProfile());
-        assertSame(comparison, comparison.getSkillGroups().get(0).getDossier());
-        assertSame(comparison.getExperiences().get(0), comparison.getExperiences().get(0).getProjects().get(0).getExperience());
-    }
+        verifyNoInteractions(users, roles, categories, skills, company, provisioningService, craProjectService,
+                passwordEncoder, properties, careerDataInitializer);
+        }
 
     @Test
-    void productionDoesNotDeleteOrSeedDemoProfiles() {
-        when(roles.count()).thenReturn(1L);
-        when(properties.getAdmin().getEmail()).thenReturn("");
+    void emptyDatabaseInitializesOnlyReferenceDataAndConfiguredAdmin() {
+        when(jdbc.execute(org.mockito.ArgumentMatchers.<org.springframework.jdbc.core.ConnectionCallback<Boolean>>any()))
+                .thenReturn(true);
+        when(properties.getAdmin().getEmail()).thenReturn(" Admin@Example.test ");
+        when(properties.getAdmin().getPassword()).thenReturn("bootstrap-password");
+        when(passwordEncoder.encode("bootstrap-password")).thenReturn("encoded-password");
+        when(roles.findByName(RoleName.ADMIN)).thenReturn(Optional.of(role(RoleName.ADMIN)));
         initializer.run(new DefaultApplicationArguments());
-        verify(users, never()).deleteAll();
-        verify(profiles, never()).deleteAll();
-        verify(profiles, never()).save(any());
-        verify(craDeclarations, never()).save(any(CraDeclaration.class));
-    }
-
-    @Test
-    void existingRoleCatalogIsCheckedForNewRolesOnStartup() {
-        when(roles.count()).thenReturn(1L);
-        when(properties.getAdmin().getEmail()).thenReturn("");
-
-        initializer.run(new DefaultApplicationArguments());
-
         verify(provisioningService).createDefaultRoles();
         verify(craProjectService).ensureDefaultProjects();
+        verify(careerDataInitializer).initialize();
+        verify(company).save(any());
+        verify(categories, atLeastOnce()).save(any());
+        verify(skills, atLeastOnce()).save(any());
+        var captured = org.mockito.ArgumentCaptor.forClass(User.class);
+        verify(users).save(captured.capture());
+        assertEquals("admin@example.test", captured.getValue().getEmail());
+        assertEquals("encoded-password", captured.getValue().getPasswordHash());
+        assertNull(captured.getValue().getProfile());
+        assertEquals(1, captured.getValue().getRoles().size());
     }
 
     @Test
-    void demoModeSeedsFourRecentAndTenOlderCraMonthsForConfiguredAdmin() {
-        when(properties.getDemo().isEnabled()).thenReturn(true);
-        when(roles.count()).thenReturn(1L);
+    void resetInitializesReferencesButDoesNotRecreateTheEnvironmentAdmin() {
+        initializer.initializeAfterReset();
+        verify(provisioningService).createDefaultRoles();
+        verify(craProjectService).ensureDefaultProjects();
+        verify(roles).flush();
+        verify(careerDataInitializer).initialize();
+        verifyNoInteractions(users, properties, passwordEncoder, jdbc);
+    }
+
+    @Test
+    void emptyDatabaseRejectsMissingOrWeakAdminCredentials() {
+        when(jdbc.execute(org.mockito.ArgumentMatchers.<org.springframework.jdbc.core.ConnectionCallback<Boolean>>any()))
+                .thenReturn(true);
         when(properties.getAdmin().getEmail()).thenReturn("admin@example.test");
-        when(properties.getAdmin().getPassword()).thenReturn("demo-password");
-        when(roles.findByName(RoleName.ADMIN)).thenReturn(Optional.of(role(RoleName.ADMIN)));
-        when(users.existsByEmailIgnoreCase("admin@example.test")).thenReturn(false);
-        User admin = new User();
-        admin.setId(java.util.UUID.randomUUID());
-        admin.setEmail("admin@example.test");
-        admin.setRoles(Set.of(role(RoleName.ADMIN)));
-        when(users.findByEmailIgnoreCase("admin@example.test")).thenReturn(Optional.of(admin));
-        CraProject sharedProject = new CraProject();
-        sharedProject.setId(java.util.UUID.randomUUID());
-        sharedProject.setCode("PAID_LEAVE");
-        sharedProject.setName("Congés payés");
-        sharedProject.setType(CraProjectType.ACCESS_ALL);
-        sharedProject.setSystemDefined(true);
-        when(craProjects.findAllByOrderByTypeAscNameAsc()).thenReturn(List.of(sharedProject));
-        when(craDeclarations.save(any(CraDeclaration.class))).thenAnswer(call -> call.getArgument(0));
+        when(properties.getAdmin().getPassword()).thenReturn("short");
+        assertThrows(IllegalStateException.class, () -> initializer.run(new DefaultApplicationArguments()));
+        verify(users, never()).save(any());
+    }
 
-        initializer.run(new DefaultApplicationArguments());
-
-        var captor = org.mockito.ArgumentCaptor.forClass(CraDeclaration.class);
-        verify(craDeclarations, times(14)).save(captor.capture());
-        List<CraDeclaration> declarations = captor.getAllValues();
-        YearMonth current = YearMonth.now();
-        assertEquals(14, declarations.stream().map(d -> d.getYear() + "-" + d.getMonth()).distinct().count());
-        Set<Integer> olderYears = new java.util.HashSet<>();
-        for (int monthsAgo : java.util.stream.IntStream.concat(
-                java.util.stream.IntStream.rangeClosed(1, 4),
-            java.util.stream.IntStream.of(12, 13, 14, 15, 16, 24, 25, 26, 27, 28)).toArray()) {
-            YearMonth period = current.minusMonths(monthsAgo);
-            if (monthsAgo >= 12) olderYears.add(period.getYear());
-            CraDeclaration declaration = declarations.stream()
-                    .filter(d -> d.getYear() == period.getYear() && d.getMonth() == period.getMonthValue())
-                    .findFirst().orElseThrow();
-            long weekdays = java.util.stream.IntStream.rangeClosed(1, period.lengthOfMonth())
-                    .mapToObj(period::atDay)
-                    .filter(date -> date.getDayOfWeek() != DayOfWeek.SATURDAY
-                            && date.getDayOfWeek() != DayOfWeek.SUNDAY)
-                    .count();
-            assertEquals(admin.getId(), declaration.getCollaborator().getId());
-            assertEquals(CraDeclarationStatus.DECLARED, declaration.getStatus());
-            assertEquals(weekdays, declaration.getEntries().size());
-            assertTrue(declaration.getEntries().stream().allMatch(entry ->
-                    entry.getProject().getType() == CraProjectType.ACCESS_ALL));
-        }
-            assertTrue(olderYears.size() >= 2);
+    @Test
+        void existingBusinessDataPreventsInitializationEvenWithoutRolesOrUsers() {
+        var actualJdbc = new org.springframework.jdbc.core.JdbcTemplate(
+            new org.springframework.jdbc.datasource.DriverManagerDataSource(
+                "jdbc:h2:mem:initializer;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE", "sa", ""));
+        actualJdbc.execute("DROP ALL OBJECTS");
+        actualJdbc.execute("CREATE TABLE flyway_schema_history(id INTEGER)");
+        actualJdbc.execute("INSERT INTO flyway_schema_history VALUES (1)");
+        actualJdbc.execute("CREATE TABLE review_forms(id INTEGER)");
+        actualJdbc.execute("INSERT INTO review_forms VALUES (1)");
+        var actual = new DataInitializer(users, roles, categories, skills, company, provisioningService,
+                craProjectService, passwordEncoder, properties, actualJdbc, careerDataInitializer);
+        actual.run(new DefaultApplicationArguments());
+        verifyNoInteractions(users, roles, categories, skills, company, provisioningService, craProjectService,
+                passwordEncoder, properties, careerDataInitializer);
     }
 
     private Role role(RoleName name) {

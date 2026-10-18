@@ -65,6 +65,13 @@ class ProfileRateAccessTest {
     }
 
     @Test
+    void internalUserCannotCreateUnlinkedProfiles() {
+        org.junit.jupiter.api.Assertions.assertThrows(org.springframework.security.access.AccessDeniedException.class,
+                () -> service.create(new ProfileUpsertRequest("Alice", "Martin", null, null, null, null,
+                        null, null, null, 650)));
+    }
+
+    @Test
     void internalUserCannotChangeTheirDailyRateThroughOwnProfileUpdate() {
         service.updateMyProfile(new ProfileUpsertRequest("Alice", "Martin", null, null, null, null,
                 null, null, null, 1));

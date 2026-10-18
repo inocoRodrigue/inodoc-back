@@ -81,4 +81,16 @@ class ShareLinkAccessTest {
         assertEquals(HttpStatus.GONE, response.getStatusCode());
         assertEquals(410, response.getBody().get("status"));
     }
+
+    @Test
+    void oldEditingLinkCannotModifyADossierThatHasBecomeMaster() {
+        var dossier = new com.esn.inodoc.domain.CompetenceDossier();
+        dossier.setMaster(true);
+        SharedLink link = new SharedLink();
+        link.setType(com.esn.inodoc.domain.ShareType.COLLABORATOR_EDIT);
+        link.setDossier(dossier);
+        when(links.findByTokenWithDossier("old-edit-link")).thenReturn(Optional.of(link));
+        assertThrows(BadRequestException.class, () -> service.editViaShare("old-edit-link",
+                new com.esn.inodoc.dto.share.SharedEditRequest(null, null)));
+    }
 }

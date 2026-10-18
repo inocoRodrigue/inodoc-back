@@ -74,9 +74,9 @@ public class ProfileService {
 
     @Transactional
     public ProfileDto create(ProfileUpsertRequest request) {
+        if (!canManageAll()) throw new AccessDeniedException("Creation de profil reservee aux gestionnaires");
         Profile profile = new Profile();
         ProfileMapper.apply(profile, request);
-        if (!canManageAll()) profile.setDailyRate(null);
         // Rule: a profile is internal only if it is linked to an account.
         // On creation, no account is associated => external.
         profile.setStatus(ProfileStatus.EXTERNAL);

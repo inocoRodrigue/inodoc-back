@@ -29,6 +29,11 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
+
         <!-- Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

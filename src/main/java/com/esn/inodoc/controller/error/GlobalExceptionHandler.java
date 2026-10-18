@@ -19,6 +19,15 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public ResponseEntity<Map<String, Object>> handleStatus(org.springframework.web.server.ResponseStatusException ex) {
+        HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
+        return ResponseEntity.status(status).headers(headers -> {
+            headers.addAll(ex.getHeaders());
+            if (status == HttpStatus.TOO_MANY_REQUESTS) headers.set("Retry-After", "900");
+        }).body(baseBody(status, ex.getReason() == null ? status.getReasonPhrase() : ex.getReason()));
+    }
+
     @ExceptionHandler(IntegrationUnavailableException.class)
     public ResponseEntity<Map<String, Object>> handleIntegration(IntegrationUnavailableException ex) {
         return build(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());

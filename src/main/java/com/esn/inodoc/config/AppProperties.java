@@ -13,7 +13,6 @@ public class AppProperties {
     private Share share = new Share();
     private Mail mail = new Mail();
     private Admin admin = new Admin();
-    private Demo demo = new Demo();
     private Sso sso = new Sso();
 
     public App getApp() {
@@ -30,14 +29,6 @@ public class AppProperties {
 
     public void setAdmin(Admin admin) {
         this.admin = admin;
-    }
-
-    public Demo getDemo() {
-        return demo;
-    }
-
-    public void setDemo(Demo demo) {
-        this.demo = demo;
     }
 
     public Sso getSso() {
@@ -109,7 +100,7 @@ public class AppProperties {
     }
 
     /**
-     * Bootstrap administrator, created on startup if it does not exist yet.
+    * Bootstrap administrator, created only when the application database is empty.
      * Its credentials come from environment variables in production.
      */
     public static class Admin {
@@ -148,22 +139,6 @@ public class AppProperties {
 
         public void setLastName(String lastName) {
             this.lastName = lastName;
-        }
-    }
-
-    /**
-     * Demo data seeding. When enabled the database is wiped and re-seeded with a
-     * demonstration data set at every startup. Must be disabled in production.
-     */
-    public static class Demo {
-        private boolean enabled = false;
-
-        public boolean isEnabled() {
-            return enabled;
-        }
-
-        public void setEnabled(boolean enabled) {
-            this.enabled = enabled;
         }
     }
 

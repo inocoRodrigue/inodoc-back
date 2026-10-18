@@ -15,6 +15,10 @@ import com.esn.inodoc.repo.RoleRepository;
 import com.esn.inodoc.repo.UserRepository;
 import com.esn.inodoc.security.JwtService;
 import com.esn.inodoc.controller.error.BadRequestException;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,12 +27,15 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.time.Instant;
+import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Locale;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Authentication: account creation, login, refresh and logout.
@@ -45,6 +52,8 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AppProperties appProperties;
     private final SecureRandom secureRandom = new SecureRandom();
+        private final Cache<String, AtomicInteger> loginAttempts = Caffeine.newBuilder()
+            .maximumSize(10_000).expireAfterWrite(Duration.ofMinutes(15)).build();
 
     public AuthService(UserRepository userRepository,
                        RoleRepository roleRepository,
@@ -66,14 +75,21 @@ public class AuthService {
 
     @Transactional
     public TokenResponse login(LoginRequest request) {
-        User user = userRepository.findByEmailIgnoreCase(request.email().trim())
+        String email = request.email().trim().toLowerCase(Locale.ROOT);
+        if (loginAttempts.get(email, ignored -> new AtomicInteger()).incrementAndGet() > 10) {
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
+                    "Trop de tentatives de connexion. Reessayez dans 15 minutes.");
+        }
+        User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new BadRequestException("Identifiants invalides"));
 
         if (!user.isEnabled() || !passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             throw new BadRequestException("Identifiants invalides");
         }
 
-        return issueTokens(user);
+        TokenResponse response = issueTokens(user);
+        loginAttempts.invalidate(email);
+        return response;
     }
 
     /**
@@ -162,7 +178,7 @@ public class AuthService {
         RefreshToken stored = refreshTokenRepository.findByTokenHash(hash)
                 .orElseThrow(() -> new BadRequestException("Jeton de rafraîchissement invalide"));
 
-        if (stored.isRevoked() || stored.getExpiresAt().isBefore(Instant.now())) {
+        if (stored.isRevoked() || !stored.getExpiresAt().isAfter(Instant.now()) || !stored.getUser().isEnabled()) {
             throw new BadRequestException("Jeton de rafraîchissement expiré ou révoqué");
         }
 

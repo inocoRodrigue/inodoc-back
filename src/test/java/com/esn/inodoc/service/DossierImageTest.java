@@ -40,6 +40,23 @@ import static org.mockito.Mockito.*;
 
 class DossierImageTest {
     @Test
+    void collaboratorCannotReplaceMasterByCreatingAnotherVersion() {
+        var profiles = mock(ProfileService.class);
+        var dossiers = mock(CompetenceDossierRepository.class);
+        UUID profileId = UUID.randomUUID();
+        when(profiles.requireProfile(profileId)).thenReturn(new Profile());
+        when(dossiers.findByProfileId(profileId)).thenReturn(List.of(new CompetenceDossier()));
+        var request = mock(DossierUpsertRequest.class);
+        when(request.master()).thenReturn(true);
+        var service = new DossierService(dossiers, profiles, mock(TechSkillService.class),
+                mock(PdfService.class), mock(S3ImageStorage.class), mock(CompanySettingsService.class));
+        assertThrows(org.springframework.security.access.AccessDeniedException.class,
+                () -> service.create(profileId, request));
+        verify(dossiers, never()).save(any());
+        verify(dossiers, never()).saveAll(any());
+    }
+
+    @Test
     void formatsExperienceDurationFromExactDates() {
         assertEquals("2 mois", ExperiencePeriodFormatter.formatDuration(
                 java.time.LocalDate.of(2026, 9, 1), java.time.LocalDate.of(2026, 10, 31)));

@@ -1,7 +1,6 @@
 {
   "careerTemplate": {
     "title": "Carnet carrière INOCO",
-    "legacyTitle": "INOCO Career Journal",
     "description": "Suivi personnel de l'embarquement, des missions, des objectifs, des badges et des contributions. Créez une entrée par étape ou par entretien.",
     "entrySchema": {
       "sections": [
@@ -74,12 +73,10 @@
   "reviewForms": [
     {
       "title": "Préparation à l'entretien semi-annuel INOCO",
-      "legacyTitle": "INOCO Semi-Annual Review Preparation",
       "description": "Support de préparation du collaborateur et du manager pour le bilan semestriel."
     },
     {
       "title": "Préparation à l'entretien annuel INOCO",
-      "legacyTitle": "INOCO Annual Review Preparation",
       "description": "Support de préparation du collaborateur et du manager pour le bilan annuel et les objectifs de l'année suivante."
     }
   ],
@@ -145,7 +142,6 @@
   "referenceDocuments": [
     {
       "title": "Référentiel des badges et tâches attendues INOCO 2026",
-      "legacyTitle": "INOCO Badge and Expected Tasks Reference 2026",
       "description": "Niveaux, tâches et volumes issus des documents badges et du classeur de suivi 2026. Les tâches sans quantité source doivent être cadrées avec le manager.",
       "category": "Carrière",
       "content": {
@@ -176,7 +172,6 @@
     },
     {
       "title": "Tâches valorisables INOCO 2025",
-      "legacyTitle": "INOCO Recognized Contributions 2025",
       "description": "Tâches supplémentaires, cercles d'influence, quantités et points issus du classeur fourni.",
       "category": "Carrière",
       "content": {
@@ -196,7 +191,6 @@
     },
     {
       "title": "Guide de préparation aux entretiens INOCO",
-      "legacyTitle": "INOCO Annual Review Preparation Guide",
       "description": "Questions du guide de préparation annuel et semi-annuel transmis.",
       "category": "Entretiens",
       "content": {
@@ -208,7 +202,6 @@
     },
     {
       "title": "Checklist de mise à jour du dossier de compétences",
-      "legacyTitle": "Competence Dossier Update Checklist",
       "description": "Repères pour conserver un dossier de compétences utile aux missions et aux échanges carrière.",
       "category": "Dossier de compétences",
       "content": {

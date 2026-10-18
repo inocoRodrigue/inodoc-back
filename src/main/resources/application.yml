@@ -70,8 +70,6 @@ inodoc:
     password: ${INODOC_ADMIN_PASSWORD}
     first-name: ${INODOC_ADMIN_FIRST_NAME}
     last-name: ${INODOC_ADMIN_LAST_NAME}
-  demo:
-    enabled: ${INODOC_DEMO_DATA}
   sso:
     # Liste des domaines email autorises a se connecter (separes par des virgules).
     allowed-domains: ${INODOC_SSO_ALLOWED_DOMAINS}

@@ -40,7 +40,7 @@ public class ShareController {
     public Page<SharedLinkDto> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return shareService.list(PageRequest.of(page, size));
+        return shareService.list(PageRequest.of(Math.max(0, page), Math.max(1, Math.min(size, 100))));
     }
 
     @DeleteMapping("/{id}")
