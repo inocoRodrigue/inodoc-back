@@ -147,6 +147,13 @@ public class DataInitializer implements ApplicationRunner {
         log.info("Reference data initialized (roles, skills, company settings)");
     }
 
+    @Transactional
+    public void initializeAfterReset() {
+        seedReferenceData();
+        craProjectService.ensureDefaultProjects();
+        roleRepository.flush();
+    }
+
     /**
      * Creates the bootstrap administrator from the configured credentials if it
      * does not exist yet. Skipped when no password is provided.

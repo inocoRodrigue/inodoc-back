@@ -103,6 +103,29 @@ public class S3ImageStorage {
         return objectKey(url) != null;
     }
 
+    public record BackupImage(String url, String contentType, byte[] bytes) {}
+
+    public BackupImage backupImage(String url) {
+        String key = objectKey(url);
+        if (key == null) throw new IllegalArgumentException("Image hors du stockage de l'application");
+        try (var client = client()) {
+            var object = client.getObjectAsBytes(request -> request.bucket(bucket).key(key));
+            return new BackupImage(url, object.response().contentType(), object.asByteArray());
+        } catch (SdkException exception) {
+            throw new IntegrationUnavailableException("Une image S3 est inaccessible. La sauvegarde est annulee.");
+        }
+    }
+
+    public String restoreImage(BackupImage image) {
+        return upload("restored/" + java.util.UUID.randomUUID(),
+                new ImageValidator.ValidatedImage(image.bytes(), image.contentType(), ""));
+    }
+
+    public void deleteRestoredImage(String url) {
+        String key = objectKey(url);
+        if (key != null && key.startsWith("restored/")) delete(key);
+    }
+
     private String objectKey(String url) {
         if (url == null || url.isBlank() || bucket.isBlank()) return null;
         try {

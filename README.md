@@ -123,6 +123,63 @@ En multi-instance, conserver l'affinite de session pendant OAuth.
 - Garder `AI_TLS_SKIP_CERTIFICATE_VERIFICATION=false` ; ne transmettre a l'IA que des donnees autorisees.
 - Autoriser le backend a lire, ecrire et supprimer les objets S3 ; sauvegarder la base avant les migrations.
 
+## Sauvegarde, restauration et reset
+
+Dans Parametres > Donnees, seul le role ADMIN peut exporter, importer ou
+reinitialiser l'application. Les endpoints `/api/admin/application-data`
+(`/export` en GET, `/import`, `/reset/request-code` et `/reset` en POST) sont
+controles cote serveur.
+
+- Le ZIP contient toutes les tables applicatives : comptes, roles, parametres,
+	catalogues, profils, evaluations, parcours, declarations CRA de tous statuts
+	et toutes annees, projets archives, historiques et relances. Pour les dossiers
+	de competences, seuls les masters et leurs sous-elements/liens sont conserves.
+- Les entretiens annuels incluent les documents de reference, les modeles
+	personnalises, les campagnes (y compris archivees), leur schema de formulaire
+	fige a la publication, les reponses et les partages. Le carnet de carriere
+	inclut les modeles modifies, toutes les entrees enregistrees et leurs partages.
+	Un import restaure les modeles et enregistrements tels qu'ils etaient lors de
+	l'export, meme si les modeles ont ete modifies ou des entrees supprimees depuis.
+- Les images S3 referencees, y compris dans les champs JSON, sont incluses.
+	Une image inaccessible fait echouer l'export : aucun reset n'est alors effectue.
+	Les fichiers externes uniquement lies par une URL ne sont pas telecharges.
+- L'import attend le ZIP brut (`Content-Type: application/zip`) et remplace les
+	donnees, sans fusion. Il exige le meme schema de base et au moins un compte
+	administrateur actif. Toute erreur annule la transaction. Les medias sont
+	recrees avec de nouvelles cles S3 et leurs URLs sont adaptees ; les originaux
+	ne sont pas ecrases. Les nouveaux objets sont nettoyes en cas d'annulation.
+- Le reset exige deux validations : une confirmation de la suppression puis
+	un code recu par mail. `POST /reset/request-code` utilise un compte Google
+	actif appartenant a l'administrateur connecte et envoie un code a six chiffres
+	a l'adresse email de son compte inoDoc. Un compte Google doit donc etre
+	connecte dans Mon compte ; sans expediteur disponible ou si l'envoi echoue,
+	aucune reinitialisation n'est autorisee. La reponse contient `challengeId`,
+	`expiresAt` et `email`, jamais le code.
+- Le code expire apres 10 minutes, est limite a cinq essais et ne fonctionne
+	qu'une fois, uniquement pour l'administrateur destinataire. Un renvoi est
+	possible apres une minute et invalide le code precedent. Seule une empreinte
+	du code est conservee en base. Les demandes temporaires sont exclues des ZIP
+	et invalidees par un import/reset, pour ne jamais reactiver un ancien code.
+- `POST /reset` exige `{ "confirmation": "REINITIALISER", "challengeId": "UUID",
+	"code": "123456" }`. Le code est consomme avant le reset ; si celui-ci echoue,
+	un nouveau code est necessaire. Le reset renvoie le ZIP d'avant
+	reset, supprime les donnees puis recree les referentiels/projets par defaut.
+	Seul le compte de l'administrateur appelant est conserve, sans profil ni
+	autres roles. Aucune donnee de demonstration n'est recreee. Les anciennes
+	images S3 ne sont pas supprimees par le reset.
+- Apres import/reset, l'interface demande une reconnexion. Les sauvegardes
+	comprennent les empreintes de mots de passe, jetons et donnees personnelles :
+	le ZIP n'est pas chiffre et doit etre conserve dans un emplacement securise.
+- Les secrets d'environnement, la configuration d'infrastructure et l'historique
+	Flyway ne sont pas exportes. Conserver `INODOC_MAIL_SECRET_KEY` pour dechiffrer
+	les comptes Google restaures ; sans cette cle, les reconnecter. Garder
+	`INODOC_DEMO_DATA=false` pour ne pas effacer les donnees au redemarrage.
+- Limite : 256 Mo pour le contenu JSON decompresse (medias encodes inclus) et
+	pour le ZIP importe. Adapter aussi la limite du reverse proxy si necessaire.
+	Les operations verrouillent les ecritures sur les tables pendant la transaction ;
+	privilegier une fenetre de maintenance. Verifier la reception du ZIP : une
+	coupure reseau apres validation du reset ne peut pas annuler celui-ci.
+
 ## Exploitation des CRA
 
 - Les migrations V21 a V28 couvrent les demi-journees, les calendriers, l'historique, les relances et le client des projets. V25 retire les anciens reglages d'ouverture/cloture et d'echeance, sans supprimer l'historique des actions. V26 permet de retirer les projets sans supprimer leurs references historiques. V27 supprime la table des plannings individuels devenus inutilises. V28 ajoute les regles par date. Elles sont appliquees par Flyway au prochain demarrage du backend ; sauvegarder la base auparavant.
